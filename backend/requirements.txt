@@ -4,3 +4,13 @@ python-dotenv
 openai
 sqlalchemy
 flask-sqlalchemy
+psycopg2
+requests
+fastapi-limiter
+redis
+aioredis
+fastapi
+uvicorn
+docker
+docker-compose
+dockerfile

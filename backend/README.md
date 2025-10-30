@@ -7,9 +7,13 @@ create a fronted/ folder an put all you React code in there, then I'll take it u
 # Project Structure
 backend/
 │
+├── fastapi_service/
+│   └── main.py           # FastAPI microservice (stateless AI service) for async AI handling 
+|
 ├── app/
 │   ├── __init__.py       # Flask app creation, register routes
-│   ├── routes.py         # API endpoints (chat, right-of-the-day)
+│   ├── routes.py         # API gateway (chat, right-of-the-day)
+│   ├── models.py         # Data handling
 │   └── services.py       # Azure OpenAI integration
 │
 ├── data/
@@ -57,4 +61,50 @@ AZURE_OPENAI_DEPLOYMENT=deployment_name
 
 ```bash
 python run.py
+```
+
+6. To run Uvicorn server for FastAPI
+
+```bash
+# Go to the fastapi_service directory first
+cd fastapi_service
+
+# Start uvicorn pointing to the FastAPI app
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+TO create PostgreSQL database
+
+```bash
+psql -U postsgres
+```
+
+Then in POstgreSQL prompt:
+
+```bash
+CREATE DATABASE tena_ai_db;
+CREATE USER tena WITH PASSWORD 'tena_password';
+GRANT ALL PRIVILEGES ON DATABASE tena_ai_db TO tena;
+```
+
+To test connections
+
+```bash
+# Test FastAPI health
+Invoke-RestMethod -Uri "http://localhost:8000/health"
+
+# Test Flask gateway
+Invoke-RestMethod -Uri "http://localhost:5000/api/"
+
+
+# Test chat endpoint via Flask
+$body = @{
+    message = "hello"
+} | ConvertTo-Json
+Invoke-RestMethod -Uri "http://localhost:5000/api/chat" -Method POST -Headers @{"Content-Type"="application/json"} -Body $body
+```
+
+
+```bash
+git pull origin main
 ```
