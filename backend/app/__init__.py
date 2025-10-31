@@ -12,8 +12,23 @@ def create_app():
    db.init_app(app)
 
    # Allow configuring the frontend origin via FRONTEND_URL env var / config
-   cors_origins = app.config.get("FRONTEND_URL", "*")
-   CORS(app, resources={r"/api/*": {"origins": cors_origins}})
+   default_origins = ["http://localhost:5173", "http://localhost:3000"]
+   cors_origins = app.config.get("FRONTEND_URL", None)
+   if not cors_origins:
+      origins = default_origins
+   elif isinstance(cors_origins, str) and "," in cors_origins:
+      origins = [o.strip() for o in cors_origins.split(",") if o.strip()]
+   else:
+      origins = [cors_origins]
+
+   # Apply CORS globally and on the API blueprint to ensure preflight matches
+   CORS(
+      app,
+      resources={r"/*": {"origins": origins}},
+      supports_credentials=False,
+      allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
+      methods=["GET", "POST", "OPTIONS"],
+   )
 
    # Register routes blueprint
    app.register_blueprint(main_bp, url_prefix="/api")

@@ -7,6 +7,21 @@ import uuid
 
 main_bp = Blueprint("api", __name__)
 
+@main_bp.after_request
+def add_cors_headers(response):
+    origin = request.headers.get("Origin")
+    allowed = {"http://localhost:5173", "http://localhost:3000"}
+    if origin in allowed:
+        response.headers["Access-Control-Allow-Origin"] = origin
+    else:
+        # default dev origin
+        response.headers["Access-Control-Allow-Origin"] = "http://localhost:5173"
+    response.headers["Vary"] = "Origin"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    return response
+
+
 # Load rights data from the repository's data folder 
 base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 data_file = os.path.join(base_dir, "data", "rights_data.json")
@@ -20,6 +35,11 @@ except Exception:
 @main_bp.route("/", methods=["GET"])
 def home():
     return jsonify({"message": "Welcome to Tena AI Backend!"})
+
+
+@main_bp.route("/chat", methods=["OPTIONS"])
+def chat_preflight():
+    return ("", 204)
 
 
 @main_bp.route("/chat", methods=["POST"])
