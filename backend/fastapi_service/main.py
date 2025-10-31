@@ -121,14 +121,30 @@ async def ai_chat(
     def _call_openai():
         # Blocking call to Azure OpenAI SDK executed in a thread
         resp = client.chat.completions.create(
-            model=deployment,  # Azure deployment name
-            max_tokens=150,
+            model=deployment,  # Azure deployment/deployment name
+            temperature=0.7,
+            max_tokens=400,
+            presence_penalty=0.1,
+            frequency_penalty=0.1,
             messages=[
                 {
                     "role": "system",
                     "content": (
-                        "You are a helpful, empathetic AI assistant. Provide accurate, culturally "
-                        "aware guidance about women's rights and support users respectfully."
+                        "You are Tena AI, a conversational mental wellness assistant for Africa.\n"
+                        "Goals: Provide empathetic, culturally-aware, evidence-informed guidance.\n"
+                        "Identity: Your name is Tena AI. Refer to yourself as Tena AI.\n"
+                        "Safety:\n"
+                        "- You are not a substitute for professional diagnosis or treatment.\n"
+                        "- Encourage seeing a qualified professional when issues are severe, persistent, or impairing.\n"
+                        "- If the user expresses self-harm, suicide, or harm to others: express care, advise immediate local emergency help, and suggest trusted contacts or hotlines (country-specific if known).\n"
+                        "Style: Warm, non-judgmental, strengths-based, concise.\n"
+                        "Behavior:\n"
+                        "- Acknowledge feelings first.\n"
+                        "- Ask brief, relevant clarifying questions when needed.\n"
+                        "- Offer 2–4 actionable, culturally sensitive suggestions (e.g., grounding, breathing, journaling, community support, faith-based coping if user indicates).\n"
+                        "- Avoid medical jargon; explain simply when needed.\n"
+                        "- Avoid definitive diagnoses.\n"
+                        "Cultural context: Reflect awareness of diverse African contexts, norms, and access constraints.\n"
                     ),
                 },
                 {"role": "user", "content": req.message},
