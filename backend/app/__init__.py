@@ -13,7 +13,7 @@ def create_app():
 
    # Allow configuring the frontend origin via FRONTEND_URL env var / config
    default_origins = ["https://tenaai.vercel.app", "http://localhost:5173", "http://localhost:3000"]
-   cors_origins = app.config.get("FRONTEND_URL", None)
+   cors_origins = app.config.get("FRONTEND_URL", "http://localhost:5173")
    if not cors_origins:
       origins = default_origins
    elif isinstance(cors_origins, str) and "," in cors_origins:

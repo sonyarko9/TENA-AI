@@ -1,4 +1,5 @@
-const API_BASE_URL = 'https://tena-api.onrender.com/api'; // for development we'll use 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+// switch between 'http://localhost:5000/api' in devlopment and 'https://tena-api.onrender.com/api' 
 
 export const api = {
     chat: async (message, sessionId = null) => {
