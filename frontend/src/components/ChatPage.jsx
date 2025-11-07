@@ -9,8 +9,8 @@ const ChatPage = ({ onLogout, isAuthenticated, userEmail, theme, onToggleTheme }
   const [isTyping, setIsTyping] = useState(false);
   const [chatHistory, setChatHistory] = useState(
     isAuthenticated ? [
-      { id: 1, title: 'My first conversation', date: '2024-10-15' },
-      { id: 2, title: 'Feeling anxious today', date: '2024-10-18' },
+      { id: 2, title: 'Feeling anxious today', date: '2025-11-05' },
+      { id: 1, title: 'My first conversation', date: '2025-11-02' },
     ] : []
   );
   const [currentChatId, setCurrentChatId] = useState(null);
