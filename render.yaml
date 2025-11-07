@@ -13,7 +13,7 @@ services:
 
   - name: tena-fastapi
     type: web
-    env: python 
+    env: docker
     rootDir: backend/fastapi_service
     runtime: python-3.10.13
     buildCommand: |
