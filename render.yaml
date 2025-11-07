@@ -3,6 +3,7 @@ services:
     type: web
     env: python 
     rootDir: backend
+    runtime: python-3.10.13
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn run:app --bind 0.0.0.0:5000
     envVars: 
@@ -14,6 +15,7 @@ services:
     type: web
     env: python 
     rootDir: backend/fastapi_service
+    runtime: python-3.10.13
     buildCommand: |
       pip install --upgrade pip
       pip install -r requirements.txt
