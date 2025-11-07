@@ -10,7 +10,7 @@ main_bp = Blueprint("api", __name__)
 @main_bp.after_request
 def add_cors_headers(response):
     origin = request.headers.get("Origin")
-    allowed = {"http://localhost:5173", "http://localhost:3000"}
+    allowed = {"https://tenaai.vercel.app","http://localhost:5173", "http://localhost:3000"}
     if origin in allowed:
         response.headers["Access-Control-Allow-Origin"] = origin
     else:

@@ -7,6 +7,7 @@ import pathlib
 # Default to local SQLite if DATABASE_URL is not provided
 _base_dir = pathlib.Path(__file__).resolve().parents[1]  # points to backend/
 _sqlite_path = _base_dir / "instance" / "tena_ai.db"
+
 SQLALCHEMY_DATABASE_URL = os.getenv(
     "DATABASE_URL",
     f"sqlite:///{_sqlite_path.as_posix()}"

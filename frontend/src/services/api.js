@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://tena-api.onrender.com/api'; // for development we'll use 'http://localhost:5000/api';
 
 export const api = {
     chat: async (message, sessionId = null) => {

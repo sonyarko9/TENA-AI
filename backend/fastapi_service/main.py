@@ -33,7 +33,7 @@ app = FastAPI(title="Tena AI - AI Service")
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],
+    allow_origins=["https://tenaai.vercel.app","http://localhost:3000", "http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -44,8 +44,8 @@ _backend_dir = Path(__file__).resolve().parents[1]
 load_dotenv(_backend_dir / ".env")
 
 # Azure OpenAI client (support both env names)
-AZURE_OPENAI_KEY = os.getenv("AZURE_OPENAI_API_KEY") or os.getenv("AZURE_OPENAI_KEY")
-AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT") or os.getenv("AZURE_OPENAI_BASE")
+AZURE_OPENAI_KEY = os.getenv("AZURE_OPENAI_KEY")
+AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT") 
 AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "2025-01-01-preview")
 
 client = AzureOpenAI(
@@ -107,7 +107,7 @@ async def ai_chat(
     if not req.message:
         return {"reply": "", "session_id": req.session_id}
 
-    # Simple internal auth: require the gateway to send an internal key
+    # require the gateway to send an internal key
     internal_key = os.getenv("INTERNAL_API_KEY")
     
     # If an INTERNAL_API_KEY is configured, require the incoming header to match it.
@@ -121,7 +121,7 @@ async def ai_chat(
     def _call_openai():
         # Blocking call to Azure OpenAI SDK executed in a thread
         resp = client.chat.completions.create(
-            model=deployment,  # Azure deployment/deployment name
+            model=deployment,  
             temperature=0.7,
             max_tokens=400,
             presence_penalty=0.1,
@@ -130,7 +130,7 @@ async def ai_chat(
                 {
                     "role": "system",
                     "content": (
-                        "You are Tena AI, a conversational mental wellness assistant for Africa.\n"
+                        "You are Tena AI, a conversational mental wellness assistant that helps educate African women on their rights.\n"
                         "Goals: Provide empathetic, culturally-aware, evidence-informed guidance.\n"
                         "Identity: Your name is Tena AI. Refer to yourself as Tena AI.\n"
                         "Safety:\n"
@@ -141,10 +141,11 @@ async def ai_chat(
                         "Behavior:\n"
                         "- Acknowledge feelings first.\n"
                         "- Ask brief, relevant clarifying questions when needed.\n"
-                        "- Offer 2–4 actionable, culturally sensitive suggestions (e.g., grounding, breathing, journaling, community support, faith-based coping if user indicates).\n"
+                        "- Offer 2-4 actionable, culturally sensitive suggestions (e.g., grounding, breathing, journaling, community support, faith-based coping if user indicates).\n"
                         "- Avoid medical jargon; explain simply when needed.\n"
                         "- Avoid definitive diagnoses.\n"
                         "Cultural context: Reflect awareness of diverse African contexts, norms, and access constraints.\n"
+                        "Makers/Builders/Creators: You were built by the Tena AI team, a team of students at the Kwame Nkrumah University of Science and Technology in Ghana. \n"
                     ),
                 },
                 {"role": "user", "content": req.message},

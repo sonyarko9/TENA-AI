@@ -7,6 +7,7 @@ class User(Base):
     
     user_id = Column(Integer, primary_key=True, index=True)
     user_name = Column(String(100), nullable=False)
+    user_email = Column(String(100), primary_key=True)
 
 class ChatSession(Base):
     __tablename__ = "chat_sessions"

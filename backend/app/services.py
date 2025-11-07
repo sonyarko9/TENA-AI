@@ -12,7 +12,7 @@ def generate_ai_response(message: str, session_id: Optional[str] = None) -> Opti
 
     Returns a dict with keys: { 'reply': str|null, 'session_id': str|null } or None on failure.
     """
-    fastapi_url = os.getenv("FASTAPI_URL", "http://localhost:8000")
+    fastapi_url = os.getenv("FASTAPI_URL", "https://tena-fastapi.onrender.com", "http://localhost:8000")
     endpoint = f"{fastapi_url.rstrip('/')}/ai/chat"
     internal_key = os.getenv("INTERNAL_API_KEY")
 

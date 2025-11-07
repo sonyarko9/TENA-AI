@@ -36,7 +36,7 @@ Request flow: React → Flask (`/api/chat`) → FastAPI (`/ai/chat`) → Flask �
 - Made rate limiting optional (no Redis needed locally). Controlled via `ENABLE_RATE_LIMIT`.
 - Switched `aioredis` to `redis.asyncio` and allowed disabling limiter to avoid Redis dependency locally.
 - Defaulted DB to SQLite when `DATABASE_URL` is not set (avoids Docker-only hostname `db`).
-- Loads env from the backend directory (`backend/.env` or `backend/backend.env`).
+- Loads env from the backend directory (`backend/.env`).
 
 ### Dependencies
 - Pinned versions to avoid resolver conflicts and HTTP client incompatibilities:
@@ -65,25 +65,21 @@ Request flow: React → Flask (`/api/chat`) → FastAPI (`/ai/chat`) → Flask �
 - Symptoms: `Client.__init__() got an unexpected keyword argument 'proxies'` and older `openai.ChatCompletion` usage.
 - Fix: Upgraded to OpenAI SDK 2.6.1 and pinned `httpx==0.27.2`, switched to `AzureOpenAI` client.
 
-6) Azure API key env var typo
-- Cause: Read `AZURE_OPENAI__KEY` (double underscore) instead of `AZURE_OPENAI_KEY`.
-- Fix: Corrected env var name and allowed either `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_KEY`.
-
-7) CORS preflight failing
+6) CORS preflight failing
 - Cause: Origin mismatch and insufficient preflight handling.
 - Fix: Allowed `http://localhost:5173` and `http://localhost:3000`, added global CORS and `after_request` CORS headers, plus explicit `OPTIONS /api/chat`.
 
-8) 401 Unauthorized from FastAPI `/ai/chat`
+7) 401 Unauthorized from FastAPI `/ai/chat`
 - Cause: `INTERNAL_API_KEY` required by FastAPI, but Flask didn’t send it due to env parse errors or mismatch.
 - Fix: Standardized on backend env file; ensured both Flask and FastAPI read the same `INTERNAL_API_KEY`. Alternatively, removed the key during local dev.
 
-9) `.env` parse warnings
+8) `.env` parse warnings
 - Cause: Invalid formatting in env file.
 - Fix: Cleaned to `KEY=VALUE` per line; comments start with `#`.
 
 ## Final Environment Setup
 
-Use a single env file in `backend/` (either `.env` or `backend.env`). Example:
+Use a single env file in `backend/` (`.env`). Example:
 
 ```
 # Flask ↔ FastAPI

@@ -12,7 +12,7 @@ def create_app():
    db.init_app(app)
 
    # Allow configuring the frontend origin via FRONTEND_URL env var / config
-   default_origins = ["http://localhost:5173", "http://localhost:3000"]
+   default_origins = ["https://tenaai.vercel.app", "http://localhost:5173", "http://localhost:3000"]
    cors_origins = app.config.get("FRONTEND_URL", None)
    if not cors_origins:
       origins = default_origins

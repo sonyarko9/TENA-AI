@@ -13,4 +13,5 @@ class Config:
    AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
    AZURE_OPENAI_DEPLOYMENT = os.getenv("AZURE_OPENAI_DEPLOYMENT")
    # frontend origin for CORS (set to '*' for dev)
-   FRONTEND_URL = os.getenv("FRONTEND_URL", "*")
+   FRONTEND_URL = os.getenv("https://tenaai.vercel.app", "FRONTEND_URL",  "http://localhost:5173")
+   FASTAPI_URL = os.getenv("https://tena-fastapi.onrender.com", "FASTAPI_URL",  "http://localhost:8000")
