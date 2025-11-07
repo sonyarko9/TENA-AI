@@ -4,7 +4,7 @@ services:
     env: python 
     rootDir: backend
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn run:app --bind 0.0.0.0:
+    startCommand: gunicorn run:app --bind 0.0.0.0:5000
     envVars: 
       - key: ENV
         value: production
@@ -14,8 +14,10 @@ services:
     type: web
     env: python 
     rootDir: backend/fastapi_service
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn fastapi_service.main:app --host=0.0.0.0 --port=8000
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+    startCommand: uvicorn fastapi_service.main:app --host 0.0.0.0 --port 8000
     envVars: 
       - key: ENV
         value: production
