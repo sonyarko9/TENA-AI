@@ -6,6 +6,6 @@ httpx==0.27.2
 python-dotenv==1.0.0
 redis==4.5.5
 fastapi-limiter==0.1.6
-sqlalchemy==2.0.30
+sqlalchemy>=2.0.44
 psycopg2-binary==2.9.9
 alembic==1.12.1
