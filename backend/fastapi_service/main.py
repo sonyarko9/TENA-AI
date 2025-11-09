@@ -93,6 +93,12 @@ else:
         return True
     rate_limit_dependency = Depends(_noop_rate_limit)
 
+def strip_markdown(text: str) -> str:
+    """Removes common Markdown characters from a string."""
+    text = text.replace('**', '').replace('*', '')
+    text = text.replace('#', '').replace('##', '').replace('###', '')
+    text = text.replace('>', '').strip()
+    return text
 
 @app.post("/ai/chat")
 async def ai_chat(
@@ -138,6 +144,9 @@ async def ai_chat(
                         "- Encourage seeing a qualified professional when issues are severe, persistent, or impairing.\n"
                         "- If the user expresses self-harm, suicide, or harm to others: express care, advise immediate local emergency help, and suggest trusted contacts or hotlines (country-specific if known).\n"
                         "Style: Warm, non-judgmental, strengths-based, concise.\n"
+                        "Output Format:\n"
+                        "- Respond in plain text only. Absolutely do no use markdown  formatting, bullet points (*, -, # etc)."
+                        "You may use well indented numbered lists (1., 2. etc), or ( •) when making a list in your reply."
                         "Behavior:\n"
                         "- Acknowledge feelings first.\n"
                         "- Ask brief, relevant clarifying questions when needed.\n"
@@ -161,6 +170,10 @@ async def ai_chat(
             raise ValueError("Azure OpenAI configuration incomplete")
         
         reply = await asyncio.to_thread(_call_openai)
+        
+        if reply:
+            reply = strip_markdown(reply)
+        
         if not reply:
             logger.error("Empty reply from OpenAI")
             return {"reply": "I apologize, but I'm having trouble generating a response. Please, try again later.", "session_id": req.session_id}

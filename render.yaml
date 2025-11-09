@@ -13,9 +13,8 @@ services:
 
   - name: tena-fastapi
     type: web
-    env: docker
+    env: python
     rootDir: backend/fastapi_service
-    runtime: python-3.10.13
     buildCommand: |
       pip install --upgrade pip
       pip install -r requirements.txt
