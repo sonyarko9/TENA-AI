@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tena_ai_db
+      POSTGRES_USER: tena
+      POSTGRES_PASSWORD: tena_password
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  fastapi:
+    build:
+      context: ./fastapi_service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - AZURE_OPENAI_KEY
+      - AZURE_OPENAI_ENDPOINT
+      - AZURE_OPENAI_API_VERSION
+      - AZURE_OPENAI_DEPLOYMENT
+      - INTERNAL_API_KEY
+      - REDIS_URL=redis://redis:6379
+      - RATE_LIMIT_MINUTE=60
+      - RATE_LIMIT_HOUR=1000
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://tena:tena_password@db:5432/tena_ai_db
+      - SECRET_KEY
+      - FLASK_ENV=development
+      - AZURE_OPENAI_KEY
+      - AZURE_OPENAI_ENDPOINT
+      - AZURE_OPENAI_DEPLOYMENT
+      - FASTAPI_URL=http://fastapi:8000
+      - INTERNAL_API_KEY
+      - FRONTEND_URL
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+      - fastapi
+
+volumes:
+  db_data:
+  redis_data:
