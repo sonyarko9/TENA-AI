@@ -3,8 +3,4 @@
   "outputDirectory": "dist",
   "devCommand": "npm run dev",
   "installCommand": "npm install"
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 4b0495196acb9aae1a9bed4822206906777d28fa
