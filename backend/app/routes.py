@@ -36,6 +36,10 @@ except Exception:
 def home():
     return jsonify({"message": "Welcome to Tena AI Backend!"})
 
+@main_bp.route("/health", methods=["GET"])
+def health():
+    return jsonify({"status": "Backend working perfectly!"})
+
 
 @main_bp.route("/chat", methods=["OPTIONS"])
 def chat_preflight():
