@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, Send, Plus, History, Settings, LogOut, Menu, X, Heart, Sun, Moon } from 'lucide-react';
+import { api } from '../services/api';
 
 const ChatPage = ({ onLogout, isAuthenticated, userEmail, theme, onToggleTheme }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -22,7 +23,7 @@ const ChatPage = ({ onLogout, isAuthenticated, userEmail, theme, onToggleTheme }
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
 
     const newMessage = {
@@ -32,19 +33,51 @@ const ChatPage = ({ onLogout, isAuthenticated, userEmail, theme, onToggleTheme }
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
-    setMessages([...messages, newMessage]);
+    const currentInput = inputValue;
+    setMessages(prev => [...prev, newMessage]);
     setInputValue('');
 
-    // Simulate AI response
-    setTimeout(() => {
+    const placeholderId = Date.now() + 1;
+    const typingPlaceholder = {
+      id: placeholderId,
+      text: "Tena is typing...",
+      sender: 'ai-placeholdrt',
+      timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit' })
+    };
+    setMessages(prev => [...prev, typingPlaceholder]);
+
+    try {
+      // Attempt to get the REAL AI response
+      const response = await api.chat(currentInput, currentChatId);
+
       const aiResponse = {
-        id: Date.now() + 1,
-        text: "I hear you, and I'm here for you. Thank you for sharing that with me. How are you feeling right now?",
+        id: Date.now() + 2,
+        text: response.reply || "An unknown response was received.", 
         sender: 'ai',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })        
       };
-      setMessages(prev => [...prev, aiResponse]);
-    }, 1000);
+
+      // If successful, remove placeholder and add REAL response
+      setMessages(prev => {
+        const messagesWithoutPlaceholder = prev.filter(msg => msg.id !== placeholderId);
+        return [...messagesWithoutPlaceholder, aiResponse];
+      });
+    } catch (error) {
+      console.error("API call failed, using fallback:", error);
+
+      // fallback error if AI fails
+      const fallbackResponse = {
+        id: Date.now() + 3,
+        text: "I'm sorry, I couldn't connect to the server. Please check your network.",
+        sender: 'ai',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })        
+      }
+
+      setMessages(prev => {
+        const messagesWithoutPlaceholder = prev.filter(msg => msg.id !== placeholderId);
+        return [...messagesWithoutPlaceholder, fallbackResponse];
+      });
+    }
   };
 
   const handleKeyPress = (e) => {

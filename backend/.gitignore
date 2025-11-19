@@ -4,3 +4,4 @@ venv/
 __pycache__
 frontend-integration
 instance
+migrations

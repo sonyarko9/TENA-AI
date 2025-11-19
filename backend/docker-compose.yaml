@@ -46,7 +46,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://tena:tena_password@db:5432/tena_ai_db
       - SECRET_KEY
-      - FLASK_ENV=development
+      - FLASK_ENV=production
       - AZURE_OPENAI_KEY
       - AZURE_OPENAI_ENDPOINT
       - AZURE_OPENAI_DEPLOYMENT
