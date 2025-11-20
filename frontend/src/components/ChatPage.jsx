@@ -1,16 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, Send, Plus, History, Settings, LogOut, Menu, X, Heart, Sun, Moon } from 'lucide-react';
-import { api } from '../services/api';
 
 const ChatPage = ({ onLogout, isAuthenticated, userEmail, theme, onToggleTheme }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
   const [chatHistory, setChatHistory] = useState(
     isAuthenticated ? [
-      { id: 2, title: 'Feeling anxious today', date: '2025-11-05' },
-      { id: 1, title: 'My first conversation', date: '2025-11-02' },
+      { id: 1, title: 'My first conversation', date: '2024-10-15' },
+      { id: 2, title: 'Feeling anxious today', date: '2024-10-18' },
     ] : []
   );
   const [currentChatId, setCurrentChatId] = useState(null);
@@ -24,7 +22,7 @@ const ChatPage = ({ onLogout, isAuthenticated, userEmail, theme, onToggleTheme }
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = () => {
     if (!inputValue.trim()) return;
 
     const newMessage = {
@@ -37,25 +35,16 @@ const ChatPage = ({ onLogout, isAuthenticated, userEmail, theme, onToggleTheme }
     setMessages([...messages, newMessage]);
     setInputValue('');
 
-    try {
-      const response = await api.chat(inputValue, currentChatId);
+    // Simulate AI response
+    setTimeout(() => {
       const aiResponse = {
         id: Date.now() + 1,
-        text: response.reply,
+        text: "I hear you, and I'm here for you. Thank you for sharing that with me. How are you feeling right now?",
         sender: 'ai',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages(prev => [...prev, aiResponse]);
-    } catch (error) {
-      console.error('Failed to get AI response:', error);
-      const errorMessage = {
-        id: Date.now() + 1,
-        text: "I apologize, but I'm having trouble connecting right now. Please try again later.",
-        sender: 'ai',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    }
+    }, 1000);
   };
 
   const handleKeyPress = (e) => {
@@ -65,7 +54,7 @@ const ChatPage = ({ onLogout, isAuthenticated, userEmail, theme, onToggleTheme }
     }
   };
 
-  const handleNewChat = async () => {
+  const handleNewChat = () => {
     if (isAuthenticated) {
       const newChat = {
         id: Date.now(),
@@ -76,23 +65,12 @@ const ChatPage = ({ onLogout, isAuthenticated, userEmail, theme, onToggleTheme }
       setCurrentChatId(newChat.id);
     }
     
-    try {
-      const response = await api.chat("Hello", newChat?.id);
-      setMessages([{
-        id: Date.now(),
-        text: response.reply || "Hello! I'm Tena, your mental wellness companion. How are you feeling today?",
-        sender: 'ai',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }]);
-    } catch (error) {
-      console.error('Failed to get initial AI response:', error);
-      setMessages([{
-        id: Date.now(),
-        text: "Hello! I'm Tena, your mental wellness companion. How are you feeling today?",
-        sender: 'ai',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }]);
-    }
+    setMessages([{
+      id: Date.now(),
+      text: "Hello! I'm Tena, your mental wellness companion. How are you feeling today?",
+      sender: 'ai',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }]);
   };
 
   return (
