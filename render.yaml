@@ -6,11 +6,11 @@ services:
     runtime: python-3.10.13
     buildCommand: |
       pip install -r requirements.txt
-      flask db upgrade
+      python -m flask db upgrade
     startCommand: gunicorn run:app --bind 0.0.0.0:5000
     envVars: 
-      - key: ENV
-        value: production
+      - key: FLASK_APP
+        value: run.py
     autoDeploy: true
 
   - name: tena-fastapi
