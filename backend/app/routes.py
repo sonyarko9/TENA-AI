@@ -54,32 +54,35 @@ def chat():
         return jsonify({"error": "No message provided"}), 400
 
     # Accept or create a session id so frontend can continue conversations
-    session_id = data.get("session_id") or uuid.uuid4().hex
+    session_uuid = data.get("session_id") or uuid.uuid4().hex
 
     # Ensure a ChatSession exists
-    chat_session = ChatSession.query.filter_by(session_id=session_id).first()
+    chat_session = ChatSession.query.filter_by(session_uuid=session_uuid).first()
     if not chat_session:
-        chat_session = ChatSession(session_id=session_id)
+        chat_session = ChatSession(session_uuid=session_uuid)
         db.session.add(chat_session)
         db.session.commit()
-
-    # Persist user message
-    user_msg = Message(session_id=session_id, sender="user", content=user_message)
-    db.session.add(user_msg)
-    db.session.commit()
-
+    
+    current_chat_id = chat_session.chat_id
+    
     # AI response (forward to FastAPI microservice)
-    ai_result = generate_ai_response(user_message, session_id=session_id)
+    ai_result = generate_ai_response(user_message, session_id=session_uuid, chat_id=current_chat_id)
+    
     if not ai_result:
         reply = "Sorry, I'm having trouble right now. Please try again later."
-        returned_session = session_id
     else:
         reply = ai_result.get("reply") or ""
-        returned_session = ai_result.get("session_id") or session_id
+    returned_session = ai_result.get("session_id") or session_uuid
 
-    bot_msg = Message(session_id=returned_session, sender="bot", content=reply)
+    # Persist user message
+    user_msg = Message(chat_id=current_chat_id, sender="user", content=user_message)
+    db.session.add(user_msg)
+    
+    # Persist bot message
+    bot_msg = Message(chat_id=current_chat_id, sender="bot", content=reply)
     db.session.add(bot_msg)
-    db.session.commit()
+    
+    db.session.commit() # commit messages
 
     return jsonify({"reply": reply, "session_id": returned_session})
 

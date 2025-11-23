@@ -13,6 +13,7 @@ const ChatPage = ({ onLogout, isAuthenticated, userEmail, theme, onToggleTheme }
     ] : []
   );
   const [currentChatId, setCurrentChatId] = useState(null);
+  const [currentSessionUUID, setCurrentSessionUUID] = useState(null);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -48,7 +49,11 @@ const ChatPage = ({ onLogout, isAuthenticated, userEmail, theme, onToggleTheme }
 
     try {
       // Attempt to get the REAL AI response
-      const response = await api.chat(currentInput, currentChatId);
+      const response = await api.chat(currentInput, currentSessionUUID);
+
+      if (response.session_id && response.session_id !== currentSessionUUID) {
+        setCurrentSessionUUID(response.session_id);
+      }
 
       const aiResponse = {
         id: Date.now() + 2,
@@ -97,6 +102,8 @@ const ChatPage = ({ onLogout, isAuthenticated, userEmail, theme, onToggleTheme }
       setChatHistory([newChat, ...chatHistory]);
       setCurrentChatId(newChat.id);
     }
+    
+    setCurrentSessionUUID(null);
     
     setMessages([{
       id: Date.now(),

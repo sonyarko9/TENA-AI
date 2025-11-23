@@ -4,7 +4,9 @@ services:
     env: python 
     rootDir: backend
     runtime: python-3.10.13
-    buildCommand: pip install -r requirements.txt
+    buildCommand: |
+      pip install -r requirements.txt
+      flask db upgrade
     startCommand: gunicorn run:app --bind 0.0.0.0:5000
     envVars: 
       - key: ENV

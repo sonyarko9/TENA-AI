@@ -1,15 +1,18 @@
 from flask import Flask
 from flask_cors import CORS
+from flask_migrate import Migrate
 from config import Config
 from app.routes import main_bp
 from .models import db
 import os
 
+migrate = Migrate()
 
 def create_app():
    app = Flask(__name__)
    app.config.from_object(Config)  # Load config
    db.init_app(app)
+   migrate.init_app(app, db)
 
    # Allow configuring the frontend origin via FRONTEND_URL env var / config
    default_origins = ["https://tenaai.vercel.app", "http://localhost:5173", "http://localhost:3000"]

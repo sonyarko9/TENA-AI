@@ -12,15 +12,10 @@ from fastapi import Header, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_limiter import FastAPILimiter
 from fastapi_limiter.depends import RateLimiter
-from pydantic import BaseModel
-from database import engine, Base
-import models
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
-
-# database tables
-Base.metadata.create_all(bind=engine)
 
 # Rate limit settings
 RATE_LIMIT_MINUTE = int(os.getenv("RATE_LIMIT_MINUTE", "60"))  # requests per minute
@@ -57,6 +52,15 @@ client = AzureOpenAI(
 
 class ChatRequest(BaseModel):
     message: str
+    session_id: Optional[str] = None
+
+class MessageContext(BaseModel):
+    role: str = Field(..., pattern="^(user|assistant)$") # 'user' or 'assistant'
+    content: str
+
+class ChatRequest(BaseModel):
+    message: str 
+    history: list[MessageContext] = [] 
     session_id: Optional[str] = None
 
 
@@ -124,7 +128,7 @@ async def ai_chat(
     if not deployment:
         return {"reply": None, "session_id": req.session_id}
 
-    def _call_openai():
+    def _call_openai(history: list[MessageContext], new_message: str):
         # Blocking call to Azure OpenAI SDK executed in a thread
         
         target_audience = """TARGET AUDIENCE:
@@ -205,19 +209,26 @@ Makers/Builders/Creators: You were built by the Tena AI team, a team of students
         
         Here are some more context about Tena AI and about how you should respond: {objectives}
         """ 
+        
+        messages_payload = [
+            {
+                "role": "system",
+                "content": system_prompt
+            }
+        ]
+        
+        for msg in history:
+            messages_payload.append(msg)
+            
+        messages_payload.append({"role": "user", "content": new_message})   
+        
         resp = client.chat.completions.create(
             model=deployment,  
             temperature=0.7,
             max_tokens=400,
             presence_penalty=0.1,
             frequency_penalty=0.1,
-            messages=[
-                {
-                    "role": "system",
-                    "content":system_prompt,
-                },
-                {"role": "user", "content": req.message},
-            ],
+            messages=messages_payload,
         )
         return (resp.choices[0].message.content or "").strip()
 
@@ -228,7 +239,7 @@ Makers/Builders/Creators: You were built by the Tena AI team, a team of students
                         bool(AZURE_OPENAI_KEY), bool(AZURE_OPENAI_ENDPOINT), bool(deployment))
             raise ValueError("Azure OpenAI configuration incomplete")
         
-        reply = await asyncio.to_thread(_call_openai)
+        reply = await asyncio.to_thread(_call_openai, req.history, req.message)
         
         if reply:
             reply = strip_markdown(reply)

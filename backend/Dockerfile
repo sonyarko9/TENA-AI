@@ -16,8 +16,11 @@ COPY . /app
 
 ENV PYTHONUNBUFFERED=1
 
+# Make the start script executable
+RUN chmod +x start.sh
+
 # Expose Flask default port
 EXPOSE 5000
 
-# Run with gunicorn for multiple workers in production/dev
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "run:app"]
+# Run the startup script
+CMD ["./start.sh"]

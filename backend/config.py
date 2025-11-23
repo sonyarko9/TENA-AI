@@ -1,7 +1,6 @@
 import os
 from dotenv import load_dotenv, find_dotenv
 
-# Load environment from the nearest .env (prefer repo root)
 load_dotenv(find_dotenv())
 
 class Config:
