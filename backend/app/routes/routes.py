@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app
 from app.services import generate_ai_response
 from app.models import Message, ChatSession, db
 from flask_login import current_user, login_required
+from datetime import datetime
 import json
 import os
 import uuid
@@ -35,9 +36,16 @@ def add_cors_headers(response):
 def home():
     return jsonify({"message": "Welcome to Tena AI Backend!"})
 
-@main_bp.route("/health", methods=["GET"])
+@main_bp.route("/health", methods=["GET", "OPTIONS"])
 def health_check():
-    return jsonify({"status": "Backend working perfectly!", "service": "Flask API"}), 200
+    if request.method == "OPTIONS":
+        return "Flask is working", 200
+    
+    return jsonify({
+        "status": "Backend working perfectly!", 
+        "service": "Flask API",
+        "timestamp": datetime.utcnow().isoformat()
+    }), 200
 
 @main_bp.route("/right-of-the-day", methods=["GET"])
 def right_of_the_day():
