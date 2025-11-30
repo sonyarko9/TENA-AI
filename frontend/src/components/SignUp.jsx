@@ -99,7 +99,7 @@ const SignUp = ({ onSignUp, onNavigateToSignIn }) => {
     }
   };
 
-  const handleSubmit = async () => { // <--- Make handleSubmit async
+  const handleSubmit = async () => {
     if (validateForm()) {
       setIsLoading(true);
 
@@ -107,20 +107,20 @@ const SignUp = ({ onSignUp, onNavigateToSignIn }) => {
       const userName = formData.name.trim();
 
       try {
-        // 1. Call the real API register function
+        // Call the real API register function
         const result = await api.register(
             formData.email, 
             formData.password, 
             userName 
         );
 
-        // 2. Registration successful (backend returns 201)
+        // Registration successful
         // Now, automatically log the user in or navigate to sign-in
         alert('Registration successful! Please sign in.');
         onNavigateToSignIn(); 
 
       } catch (error) {
-        // 3. Handle registration errors (e.g., 409 Conflict)
+        // Handle registration errors
         console.error('Registration failed:', error);
                 
         // Display a user-friendly error message

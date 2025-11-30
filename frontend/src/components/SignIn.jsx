@@ -3,7 +3,6 @@ import { Mail, Lock, Eye, EyeOff, Heart, AlertCircle } from 'lucide-react';
 import { api } from '../services/api';
 
 const SignIn = ({ onSignIn, onNavigateToSignUp, onSkipLogin, onNavigateToForgotPassword }) => {
-//                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ NEW PROP
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -73,7 +72,6 @@ const SignIn = ({ onSignIn, onNavigateToSignUp, onSkipLogin, onNavigateToForgotP
         );
 
         // Login successful (Backend returns 200 and user data)
-        // NOTE: Ensure your api.login returns 'email' and 'user_id' fields.
         onSignIn({ 
           email: result.email, 
           userId: result.user_id 

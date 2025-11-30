@@ -40,13 +40,14 @@ class User(db.Model, UserMixin):
    def generate_reset_token(self):
       """Generates a secure token and sets its issuance time."""
       self.reset_token = secrets.token_hex(32)
-      self.reset_token_issued_at = datetime.utcnow()
+      self.reset_token_expiration = datetime.utcnow() + RESET_TOKEN_LIFESPAN
       return self.reset_token
 
    def is_reset_token_valid(self):
       """Checks if the stored token is still within the expiration window."""
-      if self.reset_token and self.reset_token_issued_at:
-         return datetime.utcnow() < self.reset_token_issued_at + RESET_TOKEN_LIFESPAN
+      if self.reset_token and self.reset_token_expiration:
+         return datetime.utcnow() < self.reset_token_expiration
+      return False
   
    def check_reset_token(self, token):
       """Combines token match and expiration check."""

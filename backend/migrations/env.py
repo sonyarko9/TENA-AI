@@ -2,6 +2,9 @@ import logging
 from logging.config import fileConfig
 
 from flask import current_app
+# 1. Ensure all model definitions are imported here so Alembic can see them.
+from app import create_app
+from app.models import db # Assuming your db object and models are defined in app/models.py or similar
 
 from alembic import context
 
@@ -32,10 +35,10 @@ def get_engine_url():
         return str(get_engine().url).replace('%', '%%')
 
 
-# add your model's MetaData object here
-# for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
+# 2. Assign the target metadata directly from the db object.
+# This is the crucial step to ensure all defined models are seen by Alembic.
+target_metadata = db.metadata
+
 config.set_main_option('sqlalchemy.url', get_engine_url())
 target_db = current_app.extensions['migrate'].db
 
@@ -65,7 +68,7 @@ def run_migrations_offline():
     """
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url, target_metadata=get_metadata(), literal_binds=True
+        url=url, target_metadata=target_metadata, literal_binds=True
     )
 
     with context.begin_transaction():
@@ -99,7 +102,7 @@ def run_migrations_online():
     with connectable.connect() as connection:
         context.configure(
             connection=connection,
-            target_metadata=get_metadata(),
+            target_metadata=target_metadata, # 3. Pass the correct target_metadata
             **conf_args
         )
 

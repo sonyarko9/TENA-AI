@@ -86,8 +86,8 @@ const ResetPassword = ({ onBackToLogin }) => {
                     {/* Navigate back to Forgot Password screen using the App's router */}
                     <button 
                         type="button" 
-                        className="auth-submit-btn" // Use submit button style for primary action
-                        onClick={() => onBackToLogin('forgot')} // Need to navigate to 'forgot' page
+                        className="auth-submit-btn" 
+                        onClick={() => onBackToLogin('forgot')} 
                     >
                         Request a New Reset Link
                     </button>

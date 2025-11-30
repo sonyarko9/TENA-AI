@@ -9,6 +9,7 @@ import AdminDashboard from './components/AdminDashboard';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ForgotPassword from './components/auth/ForgotPassword'; 
 import ResetPassword from './components/auth/ResetPassword'; 
+import { api } from './services/api';
 
 // --- Auth Dialog Component ---
 const AuthDialog = ({ onNavigate, onContinueAsGuest, onClose }) => {
@@ -91,6 +92,28 @@ const AppContent = () => {
         setCurrentPage(page);
     }, []);
 
+    // Ping backend servers at health endpoints
+    useEffect(() => {
+        const runHealthCheck = async () => {
+            const status = await api.healthCheck();
+               
+            // Gracefully handle failure
+            if (status.flask) {
+                console.log("Flask backend is working.")
+            } else {    
+                console.error("Flask Backend is down or unreachable.");
+            }
+
+            if (status.fastapi) {
+                console.log("FastAPI server is active")
+            } else {    
+                console.warn("FastAPI service is down or unreachable");
+            }
+        };
+
+        runHealthCheck();
+    }, []);
+    
     // --- History Management Effects ---
     
     // Handle browser back/forward (PopState)
@@ -141,13 +164,12 @@ const AppContent = () => {
             }
         } 
         
-        // SECURITY CHECK: If user is not authenticated and is on a protected page
+        // If user is not authenticated and is on a protected page
         if (!isAuthenticated && !isGuest && (currentPage === 'chat' || currentPage === 'admin')) {
-            // Note: Forgot/Reset are public and intentionally excluded from this redirect
             navigate('landing');
         }
 
-        // SECURITY CHECK: Non-admin trying to access the admin page directly
+        // Non-admin trying to access the admin page directly
         if (currentPage === 'admin' && !isAdmin) {
             navigate(isAuthenticated ? 'chat' : 'landing');
         }

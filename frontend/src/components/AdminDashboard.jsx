@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext'; 
+import { useNavigate } from 'react-router-dom';
 import { 
     Table,
     Users, 
@@ -7,19 +9,17 @@ import {
     Gauge, 
     RefreshCw, 
     AlertTriangle,
-    Loader2
+    Loader2,
+    LogOut,
 } from 'lucide-react';
 import { api } from '../services/api';
 
-// Simple Card Component for Metrics - Refactored to match CSS structure
+// Simple Card Component for Metrics
 const MetricCard = ({ icon: Icon, title, value }) => (
     <div className="metric-card">
-        {/* The icon-wrapper class is needed for styling the icon background/size */}
         <div className="icon-wrapper">
             <Icon size={24} />
         </div>
-        
-        {/* The h3/value structure is reversed to match the CSS hierarchy */}
         <h3>{title}</h3>
         <p className="value">{value !== undefined ? value.toLocaleString() : '---'}</p>
     </div>
@@ -33,6 +33,8 @@ const AdminDashboard = () => {
     const [deletionMessage, setDeletionMessage] = useState('');
     const [isDeleting, setIsDeleting] = useState(false);
     const [users, setUsers] = useState([]);
+    const { logout } = useAuth();
+    const navigate = useNavigate();
 
     const fetchMetrics = async () => {
         setIsLoading(true);
@@ -84,6 +86,15 @@ const AdminDashboard = () => {
         }
     };
 
+    const handleLogout = async () => {
+        if (!window.confirm("Are you sure you want to log out of the Admin Dashboard?")) {
+            return;
+        }
+
+        await logout();
+        navigate('/landing');
+    };
+
     // --- Conditional Rendering ---
     
     if (isLoading) {
@@ -109,17 +120,31 @@ const AdminDashboard = () => {
     return (
         <div className="admin-dashboard">
             {/* Header Section */}
-            <header>
-                <h1><Gauge size={32} style={{marginRight: '1rem'}} /> System Health Overview</h1>
-                <p className="subtitle">Real-time metrics on application usage and core data integrity.</p>
-                <button 
-                    className="cta-button" // Reuse a common button style for a professional look
-                    onClick={handleRefresh} 
-                    disabled={isLoading || isDeleting}
-                    style={{marginTop: '1rem', marginBottom: '2rem'}}
-                >
-                    <RefreshCw size={18} /> Refresh Data
-                </button>
+            <header className="dashboard-header">
+                <div className="header-title">
+                    <h1><Gauge size={32} style={{marginRight: '1rem'}} /> System Health Overview</h1>
+                    <p className="subtitle">Real-time metrics on application usage and core data integrity.</p>
+                </div>
+                
+                <div>
+                    <button 
+                        className="cta-button" // Reuse a common button style for a professional look
+                        onClick={handleRefresh} 
+                        disabled={isLoading || isDeleting}
+                        style={{marginTop: '1rem', marginBottom: '2rem'}}
+                    >
+                        <RefreshCw size={18} /> Refresh Data
+                    </button>
+
+                    {/* LOGOUT BUTTON */}
+                    <button
+                        className="cta-button logout-button"
+                        onClick={handleLogout}
+                        disabled={isDeleting}
+                        >
+                            <LogOut size={18} /> Logout
+                    </button>
+                </div>
             </header>
 
             {/* Metrics Section */}
@@ -133,7 +158,6 @@ const AdminDashboard = () => {
                 <MetricCard 
                     icon={History} 
                     title="Total Chat Sessions" 
-                    // NOTE: Ensure your backend uses 'total_sessions' or change the key here.
                     value={metrics.total_sessions} 
                 />
                 <MetricCard 

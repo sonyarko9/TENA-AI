@@ -1,10 +1,7 @@
-# app/routes/auth_routes.py
-
 from flask import Blueprint, request, jsonify, current_app
 from app.models import User, db
 from app import bcrypt
 from flask_login import login_user, logout_user, current_user, login_required
-from sqlalchemy.exc import IntegrityError # Not strictly needed here, but kept for context
 
 auth_bp = Blueprint("auth_api", __name__, url_prefix="/api/auth")
 
@@ -38,8 +35,6 @@ def register():
         return jsonify({'message': f' A user with email {email} already exists'}), 409
     
     try:
-        # NOTE: Assumes user_name is created from email in your model
-        # You must ensure the set_password or bcrypt logic is available
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
         new_user = User(
             email=email, 
@@ -113,7 +108,7 @@ def forgot_password():
     if user:
         token = user.generate_reset_token()
         
-        # SIMULATED EMAIL SENDING (REPLACE WITH REAL EMAIL LOGIC) 📧
+        # SIMULATED EMAIL SENDING (TO BE REPLACED WITH REAL EMAIL LOGIC) 📧
         reset_link = f"http://localhost:3000/reset-password?token={token}"
         
         print(f"\n--- PASSWORD RESET TOKEN GENERATED ---")

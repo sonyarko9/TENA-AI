@@ -67,7 +67,7 @@ class ChatRequest(BaseModel):
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    return {"status": "FastAPI working perfectly!", "serivice": "FastAPI"}
 
 
 @app.on_event("startup")

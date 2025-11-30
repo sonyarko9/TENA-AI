@@ -315,7 +315,7 @@ const LandingPage = ({ onStartChat }) => {
       </section>
 
       <footer className="footer">
-        <p>© 2024 Tena AI. Empowering women and children's mental wellness across Africa.</p>
+        <p>© 2025 Tena AI. Empowering women and children's mental wellness across Africa.</p>
       </footer>
     </div>
   );

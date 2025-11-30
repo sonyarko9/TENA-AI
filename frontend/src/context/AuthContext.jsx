@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }) => {
             await api.logout();
             setIsAuthenticated(false);
             setUser(null);
-            // Optional: Reload the page to reset all application state
+            // Reload the page to reset all application state
             // window.location.reload(); 
         } catch (error) {
             console.error("Logout failed:", error);

@@ -1,12 +1,11 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const FASTAPI_BASE_URL = import.meta.env.VITE_FASTAPI_BASE_URL
 
-// 1. Core Fetch Helper
+// Core Fetch Helper
 // This function handles all network communication, automatically includes 
-// credentials (cookies) for session persistence, and centralizes error handling.
 const fetchWithAuth = async (endpoint, options = {}) => {
     const defaultOptions = {
         method: 'GET',
-        // CRUCIAL: Sends the session cookie for authentication checks
         credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
@@ -50,12 +49,34 @@ const fetchWithAuth = async (endpoint, options = {}) => {
     return response.text();
 };
 
+// Function to perform a non-authenticated health check
+const simpleFetch = async (url) => {
+    try {
+        const response = await fetch(url, { method: 'GET', cache: 'no-cache' });
+        return response.ok;
+    } catch (error) {
+        return false;
+    }
+}
 
 export const api = {
-    // --- CHAT FUNCTIONS ---
 
+    healthCheck: async () => {
+        const flaskUrl = API_BASE_URL + '/health';
+        const fastapiUrl = FASTAPI_BASE_URL + '/health';
+
+        const flaskStatus = await simpleFetch(flaskUrl);
+        const fastapiStatus = await simpleFetch(fastapiUrl);
+
+        return {
+            flask: {url: flaskUrl, status: flaskStatus},
+            fastapi: {url: fastapiUrl, status: fastapiStatus}
+        };
+    },
+
+    // --- CHAT FUNCTIONS ---
+    
     chat: async (message, sessionId = null) => {
-        // Uses fetchWithAuth (POST)
         const data = await fetchWithAuth('/chat', {
             method: 'POST',
             body: JSON.stringify({
@@ -67,22 +88,23 @@ export const api = {
     },
 
     getChatHistory: async () => {
-        // Uses fetchWithAuth (GET)
-        // Correct path is assumed to be /api/chat/history based on your backend
         return fetchWithAuth('/chat/history'); 
     },
 
     getMessagesBySessionId: async (sessionId) => {
-        // Uses fetchWithAuth (GET)
-        const data = await fetchWithAuth(`/chat/messages/${sessionId}`);
-        // Assuming the backend returns an object like { messages: [...] }
-        return data.messages || data; 
+        try {
+            const data = await fetchWithAuth(`/chat/messages/${sessionId}`);
+            return data && data.messages ? data.messages : [];
+
+        } catch (error) {
+            console.error("API error fetching messages:", error);
+            return [];
+        }     
     },
 
     // --- AUTH FUNCTIONS ---
 
     register: async (email, password, userName) => {
-        // Uses fetchWithAuth (POST)
         return fetchWithAuth('/auth/register', {
             method: 'POST',
             body: JSON.stringify({ email, password, user_name: userName })
@@ -90,7 +112,6 @@ export const api = {
     },
 
     login: async (email, password) => {
-        // Uses fetchWithAuth (POST)
         return fetchWithAuth('/auth/login', {
             method: 'POST',
             body: JSON.stringify({ email, password })
@@ -98,19 +119,16 @@ export const api = {
     },
 
     logout: async () => {
-        // Uses fetchWithAuth (POST)
         // Returns a string/text on success
         await fetchWithAuth('/auth/logout', { method: 'POST' });
         return true;
     },
 
     status: async () => {
-        // Uses fetchWithAuth (GET)
         return fetchWithAuth('/auth/status');
     },
 
     forgotPassword: async (email) => {
-        // Uses fetchWithAuth (POST)
         return fetchWithAuth('/auth/forgot-password', {
             method: 'POST',
             body: JSON.stringify({ email })
@@ -118,7 +136,6 @@ export const api = {
     },
 
     resetPassword: async (token, newPassword) => {
-        // Uses fetchWithAuth (POST)
         return fetchWithAuth('/auth/reset-password', {
             method: 'POST',
             body: JSON.stringify({ token, new_password: newPassword })
@@ -128,19 +145,15 @@ export const api = {
     // --- ADMIN FUNCTIONS ---
 
     getSystemMetrics: async () => {
-        // Uses fetchWithAuth (GET)
         return fetchWithAuth('/admin/metrics/system');
     },
 
     getAllUsers: async () => {
-        // Uses fetchWithAuth (GET)
-        // NOTE: Removed `axios` dependency for consistency.
         const data = await fetchWithAuth('/admin/users');
         return data.users;
     },
 
     deleteAllUsers: async () => {
-        // Uses fetchWithAuth (POST)
         return fetchWithAuth('/admin/delete-all-users', { method: 'POST' });
     },
 };

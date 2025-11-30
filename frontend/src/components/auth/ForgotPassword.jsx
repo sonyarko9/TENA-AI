@@ -28,8 +28,6 @@ const ForgotPassword = ({ onBackToLogin }) => {
         setStatus({ message: '', type: '' });
 
         try {
-            // NOTE: The backend should ideally return a generic success message
-            // even if the email doesn't exist, to prevent enumeration attacks.
             const response = await api.forgotPassword(email);
             setStatus({ 
                 message: response.message || "If an account exists, a password reset link has been sent to your email.", 
@@ -38,7 +36,6 @@ const ForgotPassword = ({ onBackToLogin }) => {
             // We intentionally do NOT clear the email field on success here 
             // so the user can see which email they used.
         } catch (error) {
-            // Assuming your backend API service (api.js) throws the error object
             const errorMessage = error.response?.data?.error || "Failed to process request. Please try again.";
             
             // For a production app, the generic success message is better even for an API error, 
@@ -86,8 +83,8 @@ const ForgotPassword = ({ onBackToLogin }) => {
 
                     <button 
                         type="submit" 
-                        className="auth-submit-btn" // Use the standard submit button class
-                        disabled={isLoading || !email} // Disable if loading or email is empty
+                        className="auth-submit-btn" 
+                        disabled={isLoading || !email} 
                     >
                         {isLoading ? 'Sending Link...' : 'Send Reset Link'}
                     </button>

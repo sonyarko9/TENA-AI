@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from app.models import User, ChatSession, Message, db
 from app.utils import admin_required
+from sqlalchemy import text
 from flask_login import login_required 
 import logging
 
@@ -10,7 +11,6 @@ admin_bp = Blueprint("admin_api", __name__, url_prefix="/api/admin")
 
 @admin_bp.get("/metrics/system") 
 @login_required
-@admin_required
 def system_metrics():
     """Returns application health metrics."""
     try:
@@ -55,28 +55,37 @@ def get_users():
 @admin_required
 def delete_all_users():
     """Wipes the entire database and resets ID sequences."""
+    num_deleted = 0
     try:
-        # Logic to TRUNCATE/DELETE ALL DATA
         if db.engine.driver == 'psycopg2': 
-            tables = ['users', 'chat_sessions', 'messages']
+            tables = ['"user"', 'chat_session', 'message']
+            
             for table_name in tables:
-                db.session.execute(f'TRUNCATE TABLE {table_name} RESTART IDENTITY CASCADE;')
+                # TRUNCATE RESTART IDENTITY CASCADE handles deletion order and sequence reset
+                db.session.execute(text(f'TRUNCATE TABLE {table_name} RESTART IDENTITY CASCADE;'))
+            
+            num_deleted = None 
         
         else: 
-           # Delete all records first
-            num_users = db.session.query(User).delete()
-            db.session.query(ChatSession).delete()
+            # --- SQLite Logic ---
+            
+            # Delete dependent data first (Messages, then ChatSessions) due to foreign keys.
             db.session.query(Message).delete()
-
-            db.session.execute('DELETE FROM sqlite_sequence WHERE name="user";')
-            db.session.execute('DELETE FROM sqlite_sequence WHERE name="chat_session";')
-            db.session.execute('DELETE FROM sqlite_sequence WHERE name="message";')
+            db.session.query(ChatSession).delete()
+            
+            # Delete main User data and capture count.
+            num_deleted = db.session.query(User).delete()
+            
+            # Reset auto-increment counters using the specific SQLite table: sqlite_sequence
+            db.session.execute(text('DELETE FROM sqlite_sequence WHERE name="user";'))
+            db.session.execute(text('DELETE FROM sqlite_sequence WHERE name="chat_session";'))
+            db.session.execute(text('DELETE FROM sqlite_sequence WHERE name="message";'))
             
         db.session.commit()
         
         return jsonify({
             'message': 'Successfully deleted all user data, chat sessions, and messages. Database ID sequences have been reset to 1.',
-            'count_deleted': num_users if db.engine.driver != 'psycopg2' else None
+            'count_deleted': num_deleted 
         }), 200
 
     except Exception as e:

@@ -1,18 +1,17 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
     MessageCircle, Send, Plus, History, Settings, LogOut, 
-    Menu, X, Heart, Sun, Moon, Gauge // Added Gauge for Admin button
+    Menu, X, Heart, Sun, Moon, Gauge 
 } from 'lucide-react';
 import { api } from '../services/api';
 
-// 1. UPDATED PROPS: Accept isAdmin and onNavigate from App.jsx
 const ChatPage = ({ onLogout, isAuthenticated, userEmail, theme, onToggleTheme, isAdmin, onNavigate }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [messages, setMessages] = useState([]);
     const [inputValue, setInputValue] = useState('');
     const [chatHistory, setChatHistory] = useState([]);
     
-    // State to hold the current chat's internal ID (if needed for context, often redundant with UUID)
+    // State to hold the current chat's internal ID 
     const [currentChatId, setCurrentChatId] = useState(null); 
     // State to hold the current chat's public UUID (used for API calls)
     const [currentSessionUUID, setCurrentSessionUUID] = useState(null); 
@@ -27,22 +26,26 @@ const ChatPage = ({ onLogout, isAuthenticated, userEmail, theme, onToggleTheme, 
 
     // --- Handlers ---
     
-    // 2. loadSessionMessages requires access to state setters (which are stable in React >= 18)
+    // loadSessionMessages requires access to state setters
     const loadSessionMessages = useCallback(async (sessionId) => {
         if (!isAuthenticated) return;
 
-        // Note: sessionId here is the session_uuid from the backend history API
-        setCurrentChatId(sessionId); // Set the active session indicator in the UI
+        // sessionId here is the session_uuid from the backend history API
+        setCurrentChatId(sessionId); 
         setMessages([]);
 
         try {
-            // Note: api.getMessagesBySessionId is assumed to handle the UUID parameter
-            const fetchedMessages = await api.getMessagesBySessionId(sessionId);
-
-            const formattedMessages = fetchedMessages.messages.map(msg => ({
+            // api.getMessagesBySessionId handles the UUID parameter
+            const fetchedMessagesArray = await api.getMessagesBySessionId(sessionId);
+            
+            // ensure variable is an array before mapping
+            const messagesToFormat = Array.isArray(fetchedMessagesArray) ? fetchedMessagesArray : [];
+            
+            // map directly on the array
+            const formattedMessages = messagesToFormat.map(msg => ({
                 id: msg.id,
                 text: msg.text,
-                sender: msg.sender === 'bot' ? 'ai' : 'user', // Ensure consistency
+                sender: msg.sender === 'bot' ? 'ai' : 'user', 
                 timestamp: msg.timestamp,
             }));
 
@@ -59,7 +62,7 @@ const ChatPage = ({ onLogout, isAuthenticated, userEmail, theme, onToggleTheme, 
                 }
             ]);
         }
-    }, [isAuthenticated]); // Dependencies are clean
+    }, [isAuthenticated]); 
 
     const handleSendMessage = async () => {
         if (!inputValue.trim()) return;
@@ -79,7 +82,7 @@ const ChatPage = ({ onLogout, isAuthenticated, userEmail, theme, onToggleTheme, 
         const typingPlaceholder = {
             id: placeholderId,
             text: "Tena is typing...",
-            sender: 'ai-placeholder', // Renamed sender type for clearer filtering
+            sender: 'ai-placeholder', 
             timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit' })
         };
         setMessages(prev => [...prev, typingPlaceholder]);
@@ -262,7 +265,7 @@ const ChatPage = ({ onLogout, isAuthenticated, userEmail, theme, onToggleTheme, 
                         </div>
                     )}
                     
-                    {/* 3. NEW: Admin Dashboard Link */}
+                    {/* Admin Dashboard Link */}
                     {isAdmin && (
                         <button className="sidebar-btn admin-btn" onClick={() => onNavigate('admin')}>
                             <Gauge size={20} />
@@ -306,7 +309,7 @@ const ChatPage = ({ onLogout, isAuthenticated, userEmail, theme, onToggleTheme, 
                             </p>
                         </div>
                     ) : (
-                        messages.map(message => (
+                        messages.map((message) => (
                             <div key={message.id} className={`message ${message.sender}`}>
                                 <div className="message-content">
                                     <p>{message.text}</p>

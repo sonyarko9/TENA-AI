@@ -36,8 +36,8 @@ def home():
     return jsonify({"message": "Welcome to Tena AI Backend!"})
 
 @main_bp.route("/health", methods=["GET"])
-def health():
-    return jsonify({"status": "Backend working perfectly!"})
+def health_check():
+    return jsonify({"status": "Backend working perfectly!", "service": "Flask API"}), 200
 
 @main_bp.route("/right-of-the-day", methods=["GET"])
 def right_of_the_day():
