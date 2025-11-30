@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, Heart, AlertCircle } from 'lucide-react';
+import { api } from '../services/api';
 
-const SignIn = ({ onSignIn, onNavigateToSignUp, onSkipLogin }) => {
+const SignIn = ({ onSignIn, onNavigateToSignUp, onSkipLogin, onNavigateToForgotPassword }) => {
+//                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ NEW PROP
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -55,17 +57,46 @@ const SignIn = ({ onSignIn, onNavigateToSignUp, onSkipLogin }) => {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
+  const handleSubmit = async (e) => { 
+    e.preventDefault(); 
+        
+    setErrors(prev => ({ ...prev, submit: '' })); 
+
     if (validateForm()) {
       setIsLoading(true);
-      
-      // Simulate API call
-      setTimeout(() => {
+          
+      try {
+        // Call the API login function
+        const result = await api.login(
+                      formData.email, 
+                      formData.password 
+        );
+
+        // Login successful (Backend returns 200 and user data)
+        // NOTE: Ensure your api.login returns 'email' and 'user_id' fields.
+        onSignIn({ 
+          email: result.email, 
+          userId: result.user_id 
+        }); 
+
+      } catch (error) {
+        // Handle API errors (401 Unauthorized, etc.)
+        console.error('Login failed:', error);
+                
+        let errorMessage = 'An unexpected error occurred during sign in.';
+                
+        // Check for specific error message structure from your backend API service
+        if (error.message.includes('Invalid email or password')) {
+          errorMessage = 'Invalid email or password. Please try again.';
+        } else if (error.message.includes('Server error')) {
+          errorMessage = 'The server is temporarily unavailable. Please try again later.';
+        }
+
+        setErrors(prev => ({ ...prev, submit: errorMessage }));
+
+      } finally {
         setIsLoading(false);
-        onSignIn(formData.email);
-      }, 1000);
+      }
     }
   };
 
@@ -88,6 +119,13 @@ const SignIn = ({ onSignIn, onNavigateToSignUp, onSkipLogin }) => {
         </div>
 
         <div className="auth-form">
+          {errors.submit && (
+            <div className="error-message submit-error">
+              <AlertCircle size={16} />
+              <span>{errors.submit}</span> 
+            </div>
+          )}
+
           <div className="form-group">
             <label htmlFor="email">Email Address</label>
             <div className="input-wrapper">
@@ -142,6 +180,18 @@ const SignIn = ({ onSignIn, onNavigateToSignUp, onSkipLogin }) => {
                 <span>{errors.password}</span>
               </div>
             )}
+            
+            {/* ---Forgot Password Link --- */}
+            <button 
+              type="button" 
+              className="auth-link forgot-password-link"
+              onClick={onNavigateToForgotPassword}
+              // Style adjustment might be needed in App.css for proper positioning
+              style={{ alignSelf: 'flex-end', marginTop: '5px', fontSize: '0.9em' }}
+            >
+              Forgot Password?
+            </button>
+            {/* ---------------------------------- */}
           </div>
 
           <button 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, Heart, AlertCircle, User } from 'lucide-react';
+import { api } from '../services/api';
 
 const SignUp = ({ onSignUp, onNavigateToSignIn }) => {
   const [formData, setFormData] = useState({
@@ -98,15 +99,43 @@ const SignUp = ({ onSignUp, onNavigateToSignIn }) => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => { // <--- Make handleSubmit async
     if (validateForm()) {
       setIsLoading(true);
 
-      // Simulate API call
-      setTimeout(() => {
-        setIsLoading(false);
-        onSignUp(formData.email, formData.name);
-      }, 1000);
+      // We use name for the user_name backend field
+      const userName = formData.name.trim();
+
+      try {
+        // 1. Call the real API register function
+        const result = await api.register(
+            formData.email, 
+            formData.password, 
+            userName 
+        );
+
+        // 2. Registration successful (backend returns 201)
+        // Now, automatically log the user in or navigate to sign-in
+        alert('Registration successful! Please sign in.');
+        onNavigateToSignIn(); 
+
+      } catch (error) {
+        // 3. Handle registration errors (e.g., 409 Conflict)
+        console.error('Registration failed:', error);
+                
+        // Display a user-friendly error message
+        setErrors({ 
+            submit: error.message || 'An unexpected error occurred during registration.' 
+        });
+
+        // Check for specific error messages (like from the 409 check)
+        if (error.message.includes('already exists')) {
+            setErrors({ email: 'This email is already registered.' });
+        }
+
+      } finally {
+          setIsLoading(false);
+      }
     }
   };
 
@@ -129,6 +158,13 @@ const SignUp = ({ onSignUp, onNavigateToSignIn }) => {
         </div>
 
         <div className="auth-form">
+          {errors.submit && (
+            <div className="error-message submit-error">
+              <AlertCircle size={16} />
+              <span>{error.submit}</span>
+            </div>
+          )}
+
           <div className="form-group">
             <label htmlFor="name">Full Name</label>
             <div className="input-wrapper">

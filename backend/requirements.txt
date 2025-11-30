@@ -8,3 +8,6 @@ psycopg2==2.9.11
 openai==2.6.1
 httpx==0.27.2
 flask-migrate==4.0.4
+flask-bcrypt
+flask-login
+

@@ -2321,3 +2321,342 @@ body.dark .privacy-note {
     font-size: 1rem;
   }
 }
+
+
+/* ==================== ADMIN DASHBOARD STYLES ==================== */
+
+.admin-dashboard {
+    padding: 3rem 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: #e0d6c3; /* Matches light body */
+    color: #333;
+    animation: fadeIn 0.8s ease-out;
+}
+
+body.dark .admin-dashboard {
+    background: #000000; /* Matches dark body */
+    color: #ffffff;
+}
+
+.admin-dashboard h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+body.dark .admin-dashboard h1 {
+    color: #ffffff;
+}
+
+.admin-dashboard p.subtitle {
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 3rem;
+    border-bottom: 2px solid rgba(191, 168, 125, 0.2);
+    padding-bottom: 1.5rem;
+}
+
+body.dark .admin-dashboard p.subtitle {
+    color: #a0a0a0;
+    border-bottom: 1px solid rgba(191, 168, 125, 0.2);
+}
+
+/* --- Metrics Grid --- */
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-bottom: 4rem;
+}
+
+.metric-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    border-color: #bfa87d;
+}
+
+body.dark .metric-card {
+    background: #1a1a1a;
+    border-color: rgba(191, 168, 125, 0.2);
+}
+
+body.dark .metric-card:hover {
+    border-color: #bfa87d;
+}
+
+.metric-card .icon-wrapper {
+    width: 48px;
+    height: 48px;
+    background: #bfa87d;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000000;
+    margin-bottom: 1rem;
+}
+
+.metric-card h3 {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #7D8E95;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+body.dark .metric-card h3 {
+    color: #a0a0a0;
+}
+
+.metric-card .value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #333;
+    line-height: 1;
+}
+
+body.dark .metric-card .value {
+    color: #ffffff;
+}
+
+/* --- Admin Actions Section --- */
+
+.admin-actions h2 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: #333;
+}
+
+body.dark .admin-actions h2 {
+    color: #ffffff;
+}
+
+.action-card {
+    background: #fef2f2; /* Light red/warning color */
+    padding: 2rem;
+    border-radius: 1rem;
+    border: 2px solid #fca5a5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+}
+
+body.dark .action-card {
+    background: #250000;
+    border: 1px solid #7f1d1d;
+}
+
+.action-card .text h3 {
+    font-size: 1.25rem;
+    color: #991b1b;
+    margin-bottom: 0.5rem;
+}
+
+body.dark .action-card .text h3 {
+    color: #fca5a5;
+}
+
+.action-card .text p {
+    color: #b91c1c;
+    font-size: 0.95rem;
+}
+
+body.dark .action-card .text p {
+    color: #fecaca;
+}
+
+.action-card .delete-btn {
+    background: #ef4444; /* Tailwind Red 500 */
+    color: white;
+    padding: 1rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.action-card .delete-btn:hover {
+    background: #dc2626; /* Darker Red */
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    transform: translateY(-2px);
+}
+
+.action-card .delete-btn:disabled {
+    background: #f87171;
+    cursor: not-allowed;
+    opacity: 0.7;
+    transform: none;
+    box-shadow: none;
+}
+
+/* --- Utility/Feedback Styles --- */
+.loading-indicator {
+    padding: 1rem;
+    text-align: center;
+    font-size: 1.1rem;
+    color: #bfa87d;
+}
+
+.error-message {
+    padding: 1rem;
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+body.dark .error-message {
+    background: #250000;
+    color: #fca5a5;
+    border-color: #7f1d1d;
+}
+
+/* ==================== CHAT PAGE SIDEBAR ADMIN BUTTON FIX ==================== */
+
+.sidebar-btn.admin-btn {
+    /* To make the admin button stand out slightly */
+    background: rgba(191, 168, 125, 0.1); 
+    color: #bfa87d; 
+    font-weight: 700;
+    border: 1px solid #bfa87d;
+    margin-top: 1rem;
+}
+
+.sidebar-btn.admin-btn:hover {
+    background: #bfa87d;
+    color: #000000;
+}
+
+.chat-page.dark .sidebar-btn.admin-btn {
+    background: rgba(191, 168, 125, 0.2);
+    color: #bfa87d;
+}
+
+.chat-page.dark .sidebar-btn.admin-btn:hover {
+    background: #bfa87d;
+    color: #000000;
+}
+
+/* --- User Management Table Styles --- */
+
+.user-list-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    border: 1px solid #eee;
+}
+
+body.dark .user-list-card {
+    background: #1a1a1a;
+    border: 1px solid rgba(191, 168, 125, 0.2);
+}
+
+.user-table-wrapper {
+    max-height: 400px; /* Limit height for long lists */
+    overflow-y: auto;
+}
+
+.user-list-card table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.user-list-card th, .user-list-card td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+body.dark .user-list-card th, body.dark .user-list-card td {
+    border-bottom: 1px solid #333;
+}
+
+.user-list-card th {
+    background-color: #f7f7f7;
+    font-weight: 600;
+    color: #333;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    position: sticky;
+    top: 0;
+}
+
+body.dark .user-list-card th {
+    background-color: #222;
+    color: #bfa87d;
+}
+
+.user-list-card tbody tr:hover {
+    background-color: #f0f0f0;
+}
+
+body.dark .user-list-card tbody tr:hover {
+    background-color: #2a2a2a;
+}
+
+.user-list-card .text-admin {
+    font-weight: 700;
+    color: #ef4444; /* Use a prominent color for admin */
+}
+
+body.dark .user-list-card .text-admin {
+    color: #fca5a5;
+}
+
+.user-list-card .no-data {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+    font-style: italic;
+}
+
+/* General form group settings */
+.auth-page .auth-form .form-group {
+    width: 100%;
+    margin-bottom: 20px; 
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-page .auth-form .form-group .input-wrapper {
+    width: 100%;
+}
+
+.forgot-password-link {
+    background: none; 
+    border: none;
+    cursor: pointer;
+    text-align: right;
+    padding: 0;
+    margin-top: 5px; 
+    color: var(--primary-color);
+    font-size: 0.9em;
+    text-decoration: none; 
+    transition: color 0.2s;
+}
+
+.forgot-password-link:hover {
+    color: var(--primary-hover-color, #6060ff);
+    text-decoration: underline;
+}

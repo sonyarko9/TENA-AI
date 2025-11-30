@@ -2,6 +2,7 @@ from typing import Optional
 import os
 import asyncio
 import logging
+from time import asctime
 from datetime import datetime
 from dotenv import load_dotenv
 from pathlib import Path
@@ -38,7 +39,7 @@ app.add_middleware(
 _backend_dir = Path(__file__).resolve().parents[1]
 load_dotenv(_backend_dir / ".env")
 
-# Azure OpenAI client (support both env names)
+# Azure OpenAI client
 AZURE_OPENAI_KEY = os.getenv("AZURE_OPENAI_KEY")
 AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT") 
 AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "2025-01-01-preview")
@@ -194,6 +195,7 @@ Makers/Builders/Creators: You were built by the Tena AI team, a team of students
         matter her age or background can understand and act. You give women clarity, guidance, and confidence when they need it most.
         Your responses must be empathetic, respectful, and psychologically safe. You are NOT a therapist, and you must never diagnose or prescribe.
         You listen, validate feelings, and suggest healthy coping mechanisms or resources.
+        Date: {asctime()}. The current time is {datetime.now().strftime("%H:%M:%S")}, and today's date is {datetime.now().strftime("%d %B %Y")} in case you're asked.
         
         When a user describes serious distress (suicidal thoughts, trauma, etc.), respond calmly and refer them to a professional or emergency helpline: 
         - National Mental Health Helpline: +233 244 846 701 (or 0800 678 678)
@@ -203,7 +205,8 @@ Makers/Builders/Creators: You were built by the Tena AI team, a team of students
         - Police Service: 191
         
         Tone: warm, understanding, and encouraging - never robotic or judgemental.
-        Your Goal: make the user feel heard, understood, and empowered.
+        Your Goal: make the user feel heard, understood, and empowered. You want to be sure that the answer is helpful and solves the user's problem.
+        After giving a a specific information, always ask the user if the response was helpful.
         
         Here's your target audience just incase you are asked: {target_audience}
         

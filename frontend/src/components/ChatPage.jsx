@@ -1,243 +1,343 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, Send, Plus, History, Settings, LogOut, Menu, X, Heart, Sun, Moon } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { 
+    MessageCircle, Send, Plus, History, Settings, LogOut, 
+    Menu, X, Heart, Sun, Moon, Gauge // Added Gauge for Admin button
+} from 'lucide-react';
 import { api } from '../services/api';
 
-const ChatPage = ({ onLogout, isAuthenticated, userEmail, theme, onToggleTheme }) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [messages, setMessages] = useState([]);
-  const [inputValue, setInputValue] = useState('');
-  const [chatHistory, setChatHistory] = useState(
-    isAuthenticated ? [
-      { id: 1, title: 'My first conversation', date: '2024-10-15' },
-      { id: 2, title: 'Feeling anxious today', date: '2024-10-18' },
-    ] : []
-  );
-  const [currentChatId, setCurrentChatId] = useState(null);
-  const [currentSessionUUID, setCurrentSessionUUID] = useState(null);
-  const messagesEndRef = useRef(null);
+// 1. UPDATED PROPS: Accept isAdmin and onNavigate from App.jsx
+const ChatPage = ({ onLogout, isAuthenticated, userEmail, theme, onToggleTheme, isAdmin, onNavigate }) => {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [messages, setMessages] = useState([]);
+    const [inputValue, setInputValue] = useState('');
+    const [chatHistory, setChatHistory] = useState([]);
+    
+    // State to hold the current chat's internal ID (if needed for context, often redundant with UUID)
+    const [currentChatId, setCurrentChatId] = useState(null); 
+    // State to hold the current chat's public UUID (used for API calls)
+    const [currentSessionUUID, setCurrentSessionUUID] = useState(null); 
+    
+    const messagesEndRef = useRef(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+    // --- Utility Functions ---
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleSendMessage = async () => {
-    if (!inputValue.trim()) return;
-
-    const newMessage = {
-      id: Date.now(),
-      text: inputValue,
-      sender: 'user',
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    const currentInput = inputValue;
-    setMessages(prev => [...prev, newMessage]);
-    setInputValue('');
+    // --- Handlers ---
+    
+    // 2. loadSessionMessages requires access to state setters (which are stable in React >= 18)
+    const loadSessionMessages = useCallback(async (sessionId) => {
+        if (!isAuthenticated) return;
 
-    const placeholderId = Date.now() + 1;
-    const typingPlaceholder = {
-      id: placeholderId,
-      text: "Tena is typing...",
-      sender: 'ai-placeholdrt',
-      timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit' })
+        // Note: sessionId here is the session_uuid from the backend history API
+        setCurrentChatId(sessionId); // Set the active session indicator in the UI
+        setMessages([]);
+
+        try {
+            // Note: api.getMessagesBySessionId is assumed to handle the UUID parameter
+            const fetchedMessages = await api.getMessagesBySessionId(sessionId);
+
+            const formattedMessages = fetchedMessages.messages.map(msg => ({
+                id: msg.id,
+                text: msg.text,
+                sender: msg.sender === 'bot' ? 'ai' : 'user', // Ensure consistency
+                timestamp: msg.timestamp,
+            }));
+
+            setMessages(formattedMessages);
+            setCurrentSessionUUID(sessionId); // Set the UUID for continued chatting
+        } catch (error) {
+            console.error("Failed to load messages:", error);
+            setMessages([
+                { 
+                    id: Date.now(), 
+                    text: 'Could not load this conversation. It may no longer exist.', 
+                    sender: 'ai', 
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+                }
+            ]);
+        }
+    }, [isAuthenticated]); // Dependencies are clean
+
+    const handleSendMessage = async () => {
+        if (!inputValue.trim()) return;
+
+        const newMessage = {
+            id: Date.now(),
+            text: inputValue,
+            sender: 'user',
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+
+        const currentInput = inputValue;
+        setMessages(prev => [...prev, newMessage]);
+        setInputValue('');
+
+        const placeholderId = Date.now() + 1;
+        const typingPlaceholder = {
+            id: placeholderId,
+            text: "Tena is typing...",
+            sender: 'ai-placeholder', // Renamed sender type for clearer filtering
+            timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit' })
+        };
+        setMessages(prev => [...prev, typingPlaceholder]);
+
+        try {
+            // Send message with the current session UUID
+            const response = await api.chat(currentInput, currentSessionUUID);
+
+            // If a NEW session was created (currentSessionUUID was null), update it
+            if (response.session_id && response.session_id !== currentSessionUUID) {
+                setCurrentSessionUUID(response.session_id);
+                // Also refresh history to show the new chat for authenticated users
+                if (isAuthenticated) {
+                    await fetchChatHistory(); 
+                }
+            }
+
+            const aiResponse = {
+                id: Date.now() + 2,
+                text: response.reply || "An unknown response was received.", 
+                sender: 'ai',
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })        
+            };
+
+            // Remove placeholder and add REAL response
+            setMessages(prev => {
+                const messagesWithoutPlaceholder = prev.filter(msg => msg.id !== placeholderId);
+                return [...messagesWithoutPlaceholder, aiResponse];
+            });
+        } catch (error) {
+            console.error("API call failed, using fallback:", error);
+
+            // fallback error if AI fails
+            const fallbackResponse = {
+                id: Date.now() + 3,
+                text: "I'm sorry, I couldn't connect to the server. Please check your network.",
+                sender: 'ai',
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })        
+            }
+
+            setMessages(prev => {
+                const messagesWithoutPlaceholder = prev.filter(msg => msg.id !== placeholderId);
+                return [...messagesWithoutPlaceholder, fallbackResponse];
+            });
+        }
     };
-    setMessages(prev => [...prev, typingPlaceholder]);
-
-    try {
-      // Attempt to get the REAL AI response
-      const response = await api.chat(currentInput, currentSessionUUID);
-
-      if (response.session_id && response.session_id !== currentSessionUUID) {
-        setCurrentSessionUUID(response.session_id);
-      }
-
-      const aiResponse = {
-        id: Date.now() + 2,
-        text: response.reply || "An unknown response was received.", 
-        sender: 'ai',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })        
-      };
-
-      // If successful, remove placeholder and add REAL response
-      setMessages(prev => {
-        const messagesWithoutPlaceholder = prev.filter(msg => msg.id !== placeholderId);
-        return [...messagesWithoutPlaceholder, aiResponse];
-      });
-    } catch (error) {
-      console.error("API call failed, using fallback:", error);
-
-      // fallback error if AI fails
-      const fallbackResponse = {
-        id: Date.now() + 3,
-        text: "I'm sorry, I couldn't connect to the server. Please check your network.",
-        sender: 'ai',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })        
-      }
-
-      setMessages(prev => {
-        const messagesWithoutPlaceholder = prev.filter(msg => msg.id !== placeholderId);
-        return [...messagesWithoutPlaceholder, fallbackResponse];
-      });
-    }
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
-  const handleNewChat = () => {
-    if (isAuthenticated) {
-      const newChat = {
-        id: Date.now(),
-        title: 'New conversation',
-        date: new Date().toISOString().split('T')[0]
-      };
-      setChatHistory([newChat, ...chatHistory]);
-      setCurrentChatId(newChat.id);
-    }
     
-    setCurrentSessionUUID(null);
-    
-    setMessages([{
-      id: Date.now(),
-      text: "Hello! I'm Tena, your mental wellness companion. How are you feeling today?",
-      sender: 'ai',
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    }]);
-  };
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSendMessage();
+        }
+    };
 
-  return (
-    <div className={`chat-page ${theme}`}>
-      <button 
-        className="mobile-menu-toggle"
-        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-      >
-        {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
+    const handleNewChat = () => {
+        // Reset all states for a new conversation
+        setCurrentChatId(null);
+        setCurrentSessionUUID(null);
+        
+        // Show initial welcome message
+        setMessages([{
+            id: Date.now(),
+            text: "Hello! I'm Tena, your mental wellness companion. How are you feeling today?",
+            sender: 'ai',
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }]);
 
-      <aside className={`sidebar ${isSidebarOpen ? '' : 'closed'}`}>
-        <div className="sidebar-header">
-          <div className="logo">
-            <Heart className="logo-icon" />
-            <span>Tena AI</span>
-          </div>
-        </div>
+        // If authenticated, optimistic update for history view (title updated by next API response)
+        if (isAuthenticated) {
+            const tempSessionId = `temp-${Date.now()}`;
+            const newChat = {
+                session_id: tempSessionId, // Use temp ID for the history list item
+                title: 'New conversation',
+                date: new Date().toISOString().split('T')[0]
+            };
+            setChatHistory(prev => [newChat, ...prev.filter(c => c.session_id !== tempSessionId)]);
+            setCurrentChatId(tempSessionId);
+        }
+    };
 
-        <button className="new-chat-btn" onClick={handleNewChat}>
-          <Plus size={20} />
-          New Conversation
-        </button>
+    // Helper function extracted from useEffect
+    const fetchChatHistory = async () => {
+        try {
+            const history = await api.getChatHistory();
+            const safeHistory = Array.isArray(history) ? history : [];
+            setChatHistory(safeHistory);
 
-        <div className="sidebar-section">
-          <div className="section-title">
-            <History size={18} />
-            Chat History {!isAuthenticated && '(Guest)'}
-          </div>
-          {isAuthenticated ? (
-            <div className="chat-history">
-              {chatHistory.map(chat => (
-                <div 
-                  key={chat.id} 
-                  className={`chat-history-item ${currentChatId === chat.id ? 'active' : ''}`}
-                  onClick={() => setCurrentChatId(chat.id)}
-                >
-                  <MessageCircle size={16} />
-                  <div className="chat-info">
-                    <p className="chat-title">{chat.title}</p>
-                    <p className="chat-date">{chat.date}</p>
-                  </div>
+            // If a UUID exists from a previous session (e.g., Guest mode), load it first.
+            // Otherwise, load the latest stored chat.
+            if (history.length > 0) {
+                const defaultSessionId = currentSessionUUID || history[0].session_id;
+                await loadSessionMessages(defaultSessionId);
+            } else {
+                // If history is empty, start a new chat sequence
+                handleNewChat();
+            }
+        } catch (error) {
+            console.error('Failed to load chat history:', error);
+            if (error.message.includes('401')) {
+                //onLogout(); // Force logout on 401
+            }
+            setChatHistory([]);
+        }
+    };
+
+    // --- Lifecycle Effects ---
+
+    // Load history and first session on authentication change
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchChatHistory();
+        } else {
+            // Guest mode cleanup/reset
+            setChatHistory([]); 
+            handleNewChat();
+        }
+    }, [isAuthenticated, onLogout, loadSessionMessages]);
+
+    // Scroll to bottom on messages change
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+
+    // --- Component Render ---
+    return (
+        <div className={`chat-page ${theme}`}>
+            <button 
+                className="mobile-menu-toggle"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            >
+                {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+
+            <aside className={`sidebar ${isSidebarOpen ? '' : 'closed'}`}>
+                <div className="sidebar-header">
+                    <div className="logo">
+                        <Heart className="logo-icon" />
+                        <span>Tena AI</span>
+                    </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ 
-              padding: '1rem', 
-              color: theme === 'dark' ? '#a0a0a0' : '#808080', 
-              fontSize: '0.875rem', 
-              textAlign: 'center', 
-              lineHeight: '1.6' 
-            }}>
-              Sign in to save and access your chat history
-            </div>
-          )}
-        </div>
 
-        <div className="sidebar-footer">
-          <button className="sidebar-btn theme-toggle-btn" onClick={onToggleTheme}>
-            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-            {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
-          </button>
-          <button className="sidebar-btn">
-            <Settings size={20} />
-            Settings
-          </button>
-          <button className="sidebar-btn" onClick={onLogout}>
-            <LogOut size={20} />
-            {isAuthenticated ? 'Logout' : 'Back to Home'}
-          </button>
-        </div>
-      </aside>
+                <button className="new-chat-btn" onClick={handleNewChat}>
+                    <Plus size={20} />
+                    New Conversation
+                </button>
 
-      <main className="chat-main">
-        <div className="chat-header">
-          <h2>Chat with Tena</h2>
-          <p>
-            {isAuthenticated 
-              ? `Signed in as ${userEmail} • Your conversations are saved` 
-              : 'Guest Mode • Conversations will not be saved'}
-          </p>
-        </div>
-
-        <div className="messages-container">
-          {messages.length === 0 ? (
-            <div className="empty-state">
-              <Heart size={64} />
-              <h3>Welcome to Tena AI</h3>
-              <p>
-                I'm here to listen and support you. Feel free to share what's on your mind.
-                {!isAuthenticated && ' (Guest mode: messages won\'t be saved)'}
-              </p>
-            </div>
-          ) : (
-            messages.map(message => (
-              <div key={message.id} className={`message ${message.sender}`}>
-                <div className="message-content">
-                  <p>{message.text}</p>
-                  <span className="message-time">{message.timestamp}</span>
+                <div className="sidebar-section">
+                    <div className="section-title">
+                        <History size={18} />
+                        Chat History {!isAuthenticated && '(Guest)'}
+                    </div>
+                    {isAuthenticated ? (
+                        <div className="chat-history">
+                            {chatHistory.map(chat => (
+                                <div 
+                                    // Use session_id/UUID as key
+                                    key={chat.session_id} 
+                                    className={`chat-history-item ${currentChatId === chat.session_id ? 'active' : ''}`}
+                                    onClick={() => loadSessionMessages(chat.session_id)}
+                                >
+                                    <MessageCircle size={16} />
+                                    <div className="chat-info">
+                                        <p className="chat-title">{chat.title}</p>
+                                        <p className="chat-date">{chat.date}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div style={{ padding: '1rem', color: theme === 'dark' ? '#a0a0a0' : '#808080', fontSize: '0.875rem', textAlign: 'center', lineHeight: '1.6' }}>
+                            Sign in to save and access your chat history
+                        </div>
+                    )}
                 </div>
-              </div>
-            ))
-          )}
-          <div ref={messagesEndRef} />
-        </div>
 
-        <div className="input-container">
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Share your thoughts..."
-            className="message-input"
-          />
-          <button 
-            onClick={handleSendMessage} 
-            className="send-button"
-            disabled={!inputValue.trim()}
-          >
-            <Send size={20} />
-          </button>
+                <div className="sidebar-footer">
+                    {isAuthenticated && (
+                        <div className="user-profile-info">
+                            <p className="user-email-display">{userEmail}</p>
+                        </div>
+                    )}
+                    
+                    {/* 3. NEW: Admin Dashboard Link */}
+                    {isAdmin && (
+                        <button className="sidebar-btn admin-btn" onClick={() => onNavigate('admin')}>
+                            <Gauge size={20} />
+                            Admin Dashboard
+                        </button>
+                    )}
+                    
+                    <button className="sidebar-btn theme-toggle-btn" onClick={onToggleTheme}>
+                        {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+                        {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+                    </button>
+                    <button className="sidebar-btn">
+                        <Settings size={20} />
+                        Settings
+                    </button>
+                    <button className="sidebar-btn" onClick={onLogout}>
+                        <LogOut size={20} />
+                        {isAuthenticated ? 'Logout' : 'Back to Home'}
+                    </button>
+                </div>
+            </aside>
+
+            <main className="chat-main">
+                <div className="chat-header">
+                    <h2>Chat with Tena</h2>
+                    <p>
+                        {isAuthenticated 
+                            ? `Signed in as ${userEmail} • Your conversations are saved` 
+                            : 'Guest Mode • Conversations will not be saved'}
+                    </p>
+                </div>
+
+                <div className="messages-container">
+                    {messages.length === 0 ? (
+                        <div className="empty-state">
+                            <Heart size={64} />
+                            <h3>Welcome to Tena AI</h3>
+                            <p>
+                                I'm here to listen and support you. Feel free to share what's on your mind.
+                                {!isAuthenticated && ' (Guest mode: messages won\'t be saved)'}
+                            </p>
+                        </div>
+                    ) : (
+                        messages.map(message => (
+                            <div key={message.id} className={`message ${message.sender}`}>
+                                <div className="message-content">
+                                    <p>{message.text}</p>
+                                    <span className="message-time">{message.timestamp}</span>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                    <div ref={messagesEndRef} />
+                </div>
+
+                <div className="input-container">
+                    <input
+                        type="text"
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        placeholder="Share your thoughts..."
+                        className="message-input"
+                    />
+                    <button 
+                        onClick={handleSendMessage} 
+                        className="send-button"
+                        disabled={!inputValue.trim()}
+                    >
+                        <Send size={20} />
+                    </button>
+                </div>
+            </main>
         </div>
-      </main>
-    </div>
-  );
+    );
 };
 
 export default ChatPage;
