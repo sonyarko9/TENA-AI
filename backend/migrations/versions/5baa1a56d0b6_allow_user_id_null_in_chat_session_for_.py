@@ -1,7 +1,7 @@
 """allow user_id null in chat_session for guest mode
 
 Revision ID: 5baa1a56d0b6
-Revises: 
+Revises: 001_initial
 Create Date: 2025-11-23 04:08:40.239904
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '5baa1a56d0b6'
-down_revision = None
+down_revision = '001_initial'
 branch_labels = None
 depends_on = None
 
