@@ -28,11 +28,11 @@ const LandingPage = ({ onStartChat }) => {
         <div className="hero-main-content">
           <div className="hero-text">
             <h1 className="hero-main-title">
-              Your Safe Space for<br />
+              Safe Space for Women's<br />
               <span className="gradient-text">Mental Wellness</span>
             </h1>
             <p className="hero-main-subtitle">
-              Specialized emotional support for women and children across Africa. 
+              Specialized emotional support for <strong>women</strong> and children across Africa. 
               Available 24/7, right from your phone.
             </p>
             <div className="hero-actions">
@@ -74,7 +74,7 @@ const LandingPage = ({ onStartChat }) => {
       {/* Main Platform Overview */}
       <section className="platform-overview">
         <div className="platform-header">
-          <h2 className="section-title">Complete Mental Wellness Platform</h2>
+          <h2 className="section-title">Complete Women's Mental Wellness Platform</h2>
           <p className="section-subtitle">
             Everything you need to support mental health for women and children
           </p>
@@ -84,7 +84,7 @@ const LandingPage = ({ onStartChat }) => {
             <div className="platform-card-icon">
               <MessageCircle size={32} />
             </div>
-            <h3>Multi-channel Support</h3>
+            <h3>Multi-channel Support for women</h3>
             <p>Chat, voice, and text support available on any device</p>
           </div>
           <div className="platform-card">
@@ -263,7 +263,7 @@ const LandingPage = ({ onStartChat }) => {
             </p>
             <div className="testimonial-author">
               <strong>Grace M.</strong>
-              <span>Parent, Nairobi</span>
+              <span>Parent, Kumasi</span>
             </div>
           </div>
           <div className="testimonial-card">
@@ -300,7 +300,7 @@ const LandingPage = ({ onStartChat }) => {
           </div>
           <div className="faq-item">
             <h3>What languages do you support?</h3>
-            <p>We currently support English with more African languages coming soon including Swahili, Yoruba, and Hausa.</p>
+            <p>We currently support English with more African languages coming soon including Twi, Ga, Yuroba and Hausa.</p>
           </div>
         </div>
       </section>
