@@ -5,5 +5,5 @@ echo "Running database migrations..."
 flask db upgrade
 
 echo "Starting Gunicorn server..."
-# Using the command from your original Dockerfile
-exec gunicorn -w 4 -b 0.0.0.0:5000 run:app
+# Use threaded workers so async chat requests can stay in flight concurrently
+exec gunicorn --bind 0.0.0.0:5000 --worker-class gthread -w 2 --threads 4 run:app

@@ -9,8 +9,9 @@ logger = logging.getLogger(__name__)
 
 admin_bp = Blueprint("admin_api", __name__, url_prefix="/api/admin")
 
-@admin_bp.get("/metrics/system") 
+@admin_bp.get("/metrics/system")
 @login_required
+@admin_required
 def system_metrics():
     """Returns application health metrics."""
     try:
@@ -30,6 +31,7 @@ def system_metrics():
 
 @admin_bp.get("/users")
 @login_required
+@admin_required
 def get_users():
     """Returns a list of all users with non-sensitive data."""
     try:
@@ -90,5 +92,5 @@ def delete_all_users():
 
     except Exception as e:
         db.session.rollback()
-        print(f"Database reset error: {e}")
-        return jsonify({'error': f'Failed to wipe database: {str(e)}'}), 500
+        logger.error("Database reset error: %s", e)
+        return jsonify({'error': 'Failed to wipe database due to a server error.'}), 500

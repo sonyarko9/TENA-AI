@@ -1,5 +1,4 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const FASTAPI_BASE_URL = import.meta.env.VITE_FASTAPI_BASE_URL
 
 // Core Fetch Helper
 // This function handles all network communication, automatically includes 
@@ -63,14 +62,10 @@ export const api = {
 
     healthCheck: async () => {
         const flaskUrl = API_BASE_URL + '/health';
-        const fastapiUrl = FASTAPI_BASE_URL + '/health';
-
         const flaskStatus = await simpleFetch(flaskUrl);
-        const fastapiStatus = await simpleFetch(fastapiUrl);
 
         return {
-            flask: {url: flaskUrl, status: flaskStatus},
-            fastapi: {url: fastapiUrl, status: fastapiStatus}
+            flask: {url: flaskUrl, status: flaskStatus}
         };
     },
 

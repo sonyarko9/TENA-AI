@@ -98,17 +98,12 @@ const AppContent = () => {
             const status = await api.healthCheck();
                
             // Gracefully handle failure
-            if (status.flask) {
+            if (status.flask.status) {
                 console.log("Flask backend is working.")
-            } else {    
+            } else {
                 console.error("Flask Backend is down or unreachable.");
             }
 
-            if (status.fastapi) {
-                console.log("FastAPI server is active")
-            } else {    
-                console.warn("FastAPI service is down or unreachable");
-            }
         };
 
         runHealthCheck();

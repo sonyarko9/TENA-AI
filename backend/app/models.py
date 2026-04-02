@@ -17,7 +17,7 @@ class User(db.Model, UserMixin):
    user_name = db.Column(db.String(128), nullable=False)
    email = db.Column(db.String(128), nullable=False, index=True, unique=True)
    password_hash = db.Column(db.String(128), nullable=False)
-   created_at = db.Column(db.DateTime, default=datetime.utcnow())
+   created_at = db.Column(db.DateTime, default=datetime.utcnow)
    
    is_admin = db.Column(db.Boolean, default=False)
    chat_sessions = db.relationship('ChatSession', backref='user', lazy='dynamic')
@@ -51,8 +51,10 @@ class User(db.Model, UserMixin):
   
    def check_reset_token(self, token):
       """Combines token match and expiration check."""
+      if not self.reset_token or not token:
+         return False
       return (
-         self.reset_token == token and 
+         secrets.compare_digest(self.reset_token, token) and
          self.is_reset_token_valid()
       )
     

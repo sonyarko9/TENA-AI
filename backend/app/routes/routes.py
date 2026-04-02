@@ -1,11 +1,12 @@
+import os
+import json
+import uuid
+from datetime import datetime
+
 from flask import Blueprint, request, jsonify, current_app
-from app.services import generate_ai_response
+from app.ai_service import format_messages_for_ai, generate_ai_response
 from app.models import Message, ChatSession, db
 from flask_login import current_user, login_required
-from datetime import datetime
-import json
-import os
-import uuid
 
 main_bp = Blueprint("api", __name__)
 
@@ -17,20 +18,6 @@ try:
         rights_data = json.load(f)
 except Exception:
     rights_data = {"rights": [], "faqs": []}
-
-@main_bp.after_request
-def add_cors_headers(response):
-    origin = request.headers.get("Origin")
-    allowed = {"https://tenaai.vercel.app","http://localhost:5173", "http://localhost:3000"}
-    if origin in allowed:
-        response.headers["Access-Control-Allow-Origin"] = origin
-    else:
-        response.headers["Access-Control-Allow-Origin"] = "http://localhost:5173"
-    response.headers["Vary"] = "Origin"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    response.headers["Access-Control-Allow-Credentials"] = "true"
-    return response
 
 
 @main_bp.route("/", methods=["GET"])
@@ -61,7 +48,7 @@ def chat_preflight():
 
 
 @main_bp.route("/chat", methods=["POST"])
-def chat():
+async def chat():
     data = request.get_json() or {}
     user_message = data.get("message", "")
     if not user_message:
@@ -86,15 +73,27 @@ def chat():
     
     current_chat_id = chat_session.chat_id
     
-    # AI response (forward to FastAPI microservice)
-    ai_result = generate_ai_response(user_message, session_id=session_uuid, chat_id=current_chat_id)
+    history_db_objects = db.session.execute(
+        db.select(Message)
+        .filter_by(chat_id=current_chat_id)
+        .order_by(Message.timestamp.asc())
+        .limit(10)
+    ).scalars().all()
+
+    history_payload = format_messages_for_ai(history_db_objects) if history_db_objects else []
+
+    ai_result = await generate_ai_response(
+        user_message,
+        session_id=session_uuid,
+        history=history_payload,
+    )
     
     if not ai_result:
         reply = "Sorry, I'm having trouble right now. Please try again later."
+        returned_session = session_uuid
     else:
-        reply = ai_result.get("reply", "An unknown response was received") 
-    
-    returned_session = ai_result.get("session_id") or session_uuid
+        reply = ai_result.get("reply") or "Sorry, I'm having trouble right now. Please try again later."
+        returned_session = ai_result.get("session_id") or session_uuid
 
     # Persist user message
     user_msg = Message(chat_id=current_chat_id, sender="user", content=user_message)

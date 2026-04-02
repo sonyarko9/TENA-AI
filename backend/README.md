@@ -1,17 +1,16 @@
 # TENA-AI Backend
-This is the Flask gateway backend for Tena AI. It serves public APIs under `/api/*`, persists sessions/messages, and forwards AI requests to the FastAPI microservice. The FastAPI service is async-first for performance.
+This is the Flask backend for Tena AI. It serves public APIs under `/api/*`, persists sessions/messages, and handles AI responses directly through the Flask-native async service.
 
 # Project Structure
 backend/
 │
-├── fastapi_service/
-│   └── main.py           # FastAPI microservice (stateless AI service) for async AI handling 
-|
 ├── app/
 │   ├── __init__.py       # Flask app creation, register routes
-│   ├── routes.py         # API gateway (chat, right-of-the-day)
+│   ├── routes/
+│   │   └── routes.py     # API gateway (chat, right-of-the-day)
 │   ├── models.py         # Data handling
-│   └── services.py       # Azure OpenAI integration
+│   ├── ai_service.py     # Async Azure OpenAI integration
+│   └── prompts.py        # Shared system prompt content
 │
 ├── data/
 │   └── rights_data.json  # Rights info & FAQs
@@ -47,16 +46,14 @@ pip install -r requirements.txt
 4. Set environment variables (create a `.env` in `backend/`)
 
 ```bash
-FASTAPI_URL=http://localhost:8000
-
-# Optional internal key (must match FastAPI if set)
-# INTERNAL_API_KEY=some-secret
-
-# Azure OpenAI (used by FastAPI, but kept here for shared config)
-AZURE_OPENAI_API_KEY=your_azure_openai_key
+# Azure OpenAI
+AZURE_OPENAI_KEY=your_azure_openai_key
 AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
 AZURE_OPENAI_API_VERSION=2025-01-01-preview
 AZURE_OPENAI_DEPLOYMENT=deployment_name
+
+# Optional frontend origin override
+# FRONTEND_URL=http://localhost:5173,http://localhost:3000
 ```
 
 5. Run backend
@@ -68,19 +65,7 @@ python run.py
 # runs Flask backend at http://localhost:5000
 ```
 
-6. To run Uvicorn server for FastAPI
-
-```bash
-# Go to the fastapi_service directory first
-cd backend/fastapi_service
-
-# Start uvicorn pointing to the FastAPI app
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-
-# runs FastAPI at http://localhost:8000
-```
-
-7. To run React Frontend
+6. To run React Frontend
 
 ```bash
 cd frontend
@@ -106,9 +91,6 @@ GRANT ALL PRIVILEGES ON DATABASE tena_ai_db TO tena;
 To test connections
 
 ```bash
-# Test FastAPI health
-Invoke-RestMethod -Uri "http://localhost:8000/health"
-
 # Test Flask gateway
 Invoke-RestMethod -Uri "http://localhost:5000/api/"
 
@@ -120,11 +102,4 @@ Invoke-RestMethod -Uri "http://localhost:5000/api/chat" -Method POST -Headers @{
 
 Troubleshooting
 - CORS: Flask allows `http://localhost:5173` and `http://localhost:3000` and responds to preflight.
-- 404 from FastAPI: ensure `POST /ai/chat` exists at `http://localhost:8000/docs` and you’re running `main:app`.
-- 401 from FastAPI: set matching `INTERNAL_API_KEY` in `backend/.env` or unset it in both.
 - Azure errors: verify `AZURE_OPENAI_*` values and deployment name.
-
-
-```bash
-git pull origin main
-```

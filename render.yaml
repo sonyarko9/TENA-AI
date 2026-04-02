@@ -7,21 +7,8 @@ services:
     buildCommand: |
       pip install -r requirements.txt
       python -m flask db upgrade
-    startCommand: gunicorn run:app --bind 0.0.0.0:5000
+    startCommand: gunicorn --bind 0.0.0.0:5000 --worker-class gthread -w 2 --threads 4 run:app
     envVars: 
       - key: FLASK_APP
         value: run.py
-    autoDeploy: true
-
-  - name: tena-fastapi
-    type: web
-    env: python
-    rootDir: backend/fastapi_service
-    buildCommand: |
-      pip install --upgrade pip
-      pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port 8000
-    envVars: 
-      - key: ENV
-        value: production
     autoDeploy: true
